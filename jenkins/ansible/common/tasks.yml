@@ -1,52 +1,69 @@
-# jenkins/ansible/common/tasks.yml
 ---
-# ---------- apt update and upgrade Tasks ----------
-- name: apt-get update
+# tasks.yml - Initial setup for Ubuntu server and Docker installation
+
+- name: Cleanup | Remove existing Docker GPG key file
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/docker.gpg
+    state: absent
+  tags:
+    - docker
+    - cleanup
+
+- name: Cleanup | Remove existing Docker repository file
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/docker.list
+    state: absent
+  tags:
+    - docker
+    - cleanup
+
+- name: System | Update apt cache and upgrade system packages
   ansible.builtin.apt:
     update_cache: yes
-  tags: apt, common
-
-- name: apt-get upgrade dist and clean
-  ansible.builtin.apt:
     upgrade: dist
-    autoclean: yes
-    autoremove: yes
-  tags: apt, common
+  tags:
+    - system
+    - packages
 
-# ---------- Docker Installation Tasks (apt-get 스타일) ----------
-
-- name: 1. apt-get install required dependencies for Docker
+- name: Docker | Install prerequisite packages
   ansible.builtin.apt:
     name:
       - ca-certificates
       - curl
       - gnupg
-      - lsb-release
     state: present
-  tags: docker, setup
+  tags:
+    - docker
+    - prerequisites
 
-- name: 2. Add Docker's official GPG key (curl command)
-  ansible.builtin.shell: |
-    install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  args:
-    creates: /etc/apt/keyrings/docker.gpg
-  tags: docker, setup
-  changed_when: false
+- name: Docker | Create a directory for the GPG key
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  tags:
+    - docker
+    - gpg_key
 
-- name: 3. Set up the stable Docker apt repository
+- name: Docker | Download and de-armor the GPG key
+  ansible.builtin.shell:
+    # Always overwrite the key to ensure it's correct
+    cmd: "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"
+  tags:
+    - docker
+    - gpg_key
+
+- name: Docker | Set up the repository
   ansible.builtin.apt_repository:
-    repo: "deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
-    state: present
+    repo: "deb [arch={{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
     filename: docker
-  tags: docker, setup
-
-- name: 4. Force apt-get update after adding Docker repo
-  ansible.builtin.apt:
+    state: present
     update_cache: yes
-  tags: docker, setup
+  tags:
+    - docker
+    - repository
 
-- name: 5. apt-get install Docker packages (Engine, CLI, Containerd)
+- name: Docker | Install Docker Engine and related packages
   ansible.builtin.apt:
     name:
       - docker-ce
@@ -54,13 +71,16 @@
       - containerd.io
       - docker-buildx-plugin
       - docker-compose-plugin
-    state: latest
-    update_cache: yes # 새로운 저장소 추가 후 설치를 위해 필요
-  tags: docker, setup
+    state: present
+  tags:
+    - docker
+    - installation
 
-- name: 6. Add current user ({{ ansible_user }}) to the docker group
+- name: Docker | Add the current user to the docker group
   ansible.builtin.user:
-    name: "{{ ansible_user }}"
+    name: "{{ ansible_user_id }}"
     groups: docker
     append: yes
-  tags: docker, setup
+  tags:
+    - docker
+    - configuration
