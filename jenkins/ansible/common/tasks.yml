@@ -1,16 +1,61 @@
+# jenkins/ansible/common/tasks.yml
 ---
-#- name: apt update
-#  apt:
-#    update_cache: yes
-#
-#- name: apt upgrade
-#  apt:
-#    upgrade: dist
+# ---------- apt update and upgrade Tasks ----------
+- name: apt-get update
+  ansible.builtin.apt:
+    update_cache: yes
+  tags: apt, common
 
-- name: 1. SSH 접속 확인 및 'Hello' 출력
-  ansible.builtin.command: echo "hello from {{ inventory_hostname }} on {{ ansible_distribution }}"
-  register: hello_result
+- name: apt-get upgrade dist and clean
+  ansible.builtin.apt:
+    upgrade: dist
+    autoclean: yes
+    autoremove: yes
+  tags: apt, common
 
-- name: 2. 출력 결과 디버그
-  ansible.builtin.debug:
-    msg: "{{ hello_result.stdout }}"
+# ---------- Docker Installation Tasks (apt-get 스타일) ----------
+
+- name: 1. apt-get install required dependencies for Docker
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+  tags: docker, setup
+
+- name: 2. Add Docker's official GPG key (curl command)
+  ansible.builtin.shell: |
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  args:
+    creates: /etc/apt/keyrings/docker.gpg
+  tags: docker, setup
+  changed_when: false
+
+- name: 3. Set up the stable Docker apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+    filename: docker
+  tags: docker, setup
+
+- name: 4. apt-get install Docker packages (Engine, CLI, Containerd)
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: latest
+    update_cache: yes # 새로운 저장소 추가 후 설치를 위해 필요
+  tags: docker, setup
+
+- name: 5. Add current user ({{ ansible_user }}) to the docker group
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: yes
+  tags: docker, setup
