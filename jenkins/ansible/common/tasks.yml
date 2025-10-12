@@ -41,7 +41,12 @@
     filename: docker
   tags: docker, setup
 
-- name: 4. apt-get install Docker packages (Engine, CLI, Containerd)
+- name: 4. Force apt-get update after adding Docker repo
+  ansible.builtin.apt:
+    update_cache: yes
+  tags: docker, setup
+
+- name: 5. apt-get install Docker packages (Engine, CLI, Containerd)
   ansible.builtin.apt:
     name:
       - docker-ce
@@ -53,7 +58,7 @@
     update_cache: yes # 새로운 저장소 추가 후 설치를 위해 필요
   tags: docker, setup
 
-- name: 5. Add current user ({{ ansible_user }}) to the docker group
+- name: 6. Add current user ({{ ansible_user }}) to the docker group
   ansible.builtin.user:
     name: "{{ ansible_user }}"
     groups: docker
