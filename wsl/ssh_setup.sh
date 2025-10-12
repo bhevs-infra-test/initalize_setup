@@ -1,10 +1,11 @@
 #!/bin/bash
 
-CONFIG_FILE="ssh_config.env"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+CONFIG_FILE="$DIR/ssh_config.env"
 
 # Load config
 if [ ! -f "$CONFIG_FILE" ]; then
-    echo "ERROR: Config file '$CONFIG_FILE' not found."
+    echo "ERROR: Config file '$CONFIG_FILE' not found at expected path: $CONFIG_FILE"
     exit 1
 fi
 source "$CONFIG_FILE"
@@ -21,6 +22,7 @@ echo "1. Key check/gen..."
 if [ -f "$PRIVATE_KEY_PATH" ]; then
     echo "  -> Key exists. Using existing key."
 else
+    # SSH Key Generation (assuming you want to skip if key exists)
     ssh-keygen -t rsa -b 4096 -f "$PRIVATE_KEY_PATH" -N ""
     if [ $? -ne 0 ]; then
         echo "  -> ERROR: Key generation failed."
