@@ -1,0 +1,16 @@
+---
+- hosts: controller
+  vars_files:
+    - common/vars.yml
+#    - controller/vars.yml
+  tasks:
+    - import_tasks: common/tasks.yml
+#    - import_tasks: controller/tasks.yml
+
+#- hosts: worker
+#  vars_files:
+#    - common/vars.yml
+#    - worker/vars.yml
+#  tasks:
+#    - import_tasks: common/tasks.yml
+#    - import_tasks: worker/tasks.yml

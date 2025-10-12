@@ -1,0 +1,58 @@
+- import_tasks: ../common/tasks.yml
+
+- name: Install Docker
+  apt:
+    name: docker.io
+    state: present
+    update_cache: yes
+
+- name: Check Docker version
+  command: docker --version
+  register: docker_version
+
+- name: Display Docker version
+  debug:
+    msg: "Installed Docker version: {{ docker_version.stdout }}"
+
+- name: Install Java
+  apt:
+    name: openjdk-17-jdk
+    state: present
+
+- name: Add Jenkins GPG key
+  shell: curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+
+- name: Add Jenkins repository
+  shell: echo 'deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/' | tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+- name: apt update
+  apt:
+    update_cache: yes
+
+- name: Install Jenkins
+  apt:
+    name: jenkins
+    state: present
+
+- name: Start and enable Jenkins service
+  shell: systemctl start jenkins && systemctl enable jenkins
+
+- name: Add Jenkins user to Docker group
+  user:
+    name: jenkins
+    groups: docker
+    append: yes
+
+- name: Restart Jenkins service
+  systemd:
+    name: jenkins
+    state: restarted
+    enabled: yes
+
+- name: Get Jenkins initial admin password
+  command: cat /var/lib/jenkins/secrets/initialAdminPassword
+  register: jenkins_admin_password
+
+- name: Display Jenkins initial admin password
+  debug:
+    msg: "Jenkins initial admin password: {{ jenkins_admin_password.stdout }}"

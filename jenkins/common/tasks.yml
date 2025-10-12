@@ -1,0 +1,16 @@
+---
+#- name: apt update
+#  apt:
+#    update_cache: yes
+#
+#- name: apt upgrade
+#  apt:
+#    upgrade: dist
+
+- name: 1. SSH 접속 확인 및 'Hello' 출력
+  ansible.builtin.command: echo "hello from {{ inventory_hostname }} on {{ ansible_distribution }}"
+  register: hello_result
+
+- name: 2. 출력 결과 디버그
+  ansible.builtin.debug:
+    msg: "{{ hello_result.stdout }}"

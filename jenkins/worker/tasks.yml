@@ -1,0 +1,12 @@
+- import_tasks: ../common/tasks.yml
+
+- name: Install MariaDB packages
+  apt:
+    name: "{{ mariadb_packages }}"
+    state: present
+
+- name: Start and enable MariaDB service
+  systemd:
+    name: "{{ mariadb_service_name }}"
+    state: started
+    enabled: yes
