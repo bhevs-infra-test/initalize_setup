@@ -1,45 +1,76 @@
-# controller/tasks.yml
----
-- name: Jenkins | 1. Create Docker volume
-  community.docker.docker_volume:
-    name: "{{ jenkins_volume_name }}"
-    state: present
+# common/tasks.yml - Initial setup for Ubuntu server and Docker installation
 
-- name: Jenkins | 2. Stop and remove existing Jenkins container (ensuring idempotence)
-  community.docker.docker_container:
-    name: "{{ jenkins_container_name }}"
+- name: Cleanup | Remove existing Docker GPG key file
+  ansible.builtin.file:
+    path: "{{ docker_gpg_key_path }}"
     state: absent
+  tags:
+    - docker
+    - cleanup
 
-- name: Jenkins | 3. Run Jenkins container (using official image)
-  community.docker.docker_container:
-    name: "{{ jenkins_container_name }}"
-    image: "{{ jenkins_image_official }}"
-    state: started
-    pull: yes
-    detach: yes
-    restart_policy: unless-stopped
-    ports:
-      - "{{ jenkins_host_port_http }}:8080"
-      - "{{ jenkins_host_port_agent }}:50000"
-    volumes:
-      - "{{ jenkins_volume_name }}:/var/jenkins_home"
+- name: Cleanup | Remove existing Docker repository file
+  ansible.builtin.file:
+    path: "{{ docker_repo_path }}"
+    state: absent
+  tags:
+    - docker
+    - cleanup
 
-- name: Jenkins | 4. Extract initial admin password
-  block:
-    - name: Wait for the password to be generated and path to appear in logs
-      ansible.builtin.shell:
-        cmd: "docker logs {{ jenkins_container_name }} 2>&1 | grep -o '/var/jenkins_home/secrets/initialAdminPassword' -m 1"
-      register: password_path_result
-      until: password_path_result.stdout != ""
-      retries: 20
-      delay: 5
-      changed_when: false
+- name: System | Update apt cache and upgrade system packages
+  ansible.builtin.apt:
+    update_cache: yes
+    upgrade: dist
+  tags:
+    - system
+    - packages
 
-    - name: Fetch the actual password
-      ansible.builtin.shell:
-        cmd: "docker exec {{ jenkins_container_name }} cat /var/jenkins_home/secrets/initialAdminPassword"
-      register: jenkins_password
+- name: Docker | Install prerequisite packages
+  ansible.builtin.apt:
+    name: "{{ docker_prereq_packages }}"
+    state: present
+  tags:
+    - docker
+    - prerequisites
 
-    - name: 🔑 Display the Jenkins initial password
-      ansible.builtin.debug:
-        msg: "Jenkins initial password is: {{ jenkins_password.stdout }}"
+- name: Docker | Create a directory for the GPG key
+  ansible.builtin.file:
+    path: "{{ docker_gpg_key_dir }}"
+    state: directory
+    mode: '0755'
+  tags:
+    - docker
+    - gpg_key
+
+- name: Docker | Download and de-armor the GPG key
+  ansible.builtin.shell:
+    cmd: "curl -fsSL {{ docker_gpg_key_url }} | gpg --dearmor -o {{ docker_gpg_key_path }}"
+  tags:
+    - docker
+    - gpg_key
+
+- name: Docker | Set up the repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }} signed-by={{ docker_gpg_key_path }}] {{ docker_repo_url_base }} {{ ansible_distribution_release }} stable"
+    filename: "{{ docker_repo_filename }}"
+    state: present
+    update_cache: yes
+  tags:
+    - docker
+    - repository
+
+- name: Docker | Install Docker Engine and related packages
+  ansible.builtin.apt:
+    name: "{{ docker_packages }}"
+    state: present
+  tags:
+    - docker
+    - installation
+
+- name: Docker | Add the current user to the docker group
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    groups: "{{ docker_group_name }}"
+    append: yes
+  tags:
+    - docker
+    - configuration
