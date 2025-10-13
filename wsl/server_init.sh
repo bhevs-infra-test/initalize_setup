@@ -14,6 +14,8 @@ sudo apt-get install -y \
   tmux \
   wget \
   xclip \
-  ansible
+  ansible \
+  p7zip
+
 
 echo "  -> Utilities installed."
