@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TARGET_HOST="jenkins_host"
+TARGET_HOST="controller"
 PLAYBOOK_FILE="playbook.yml"
 
 echo "--- START: Ansible Playbook Checks ---"
