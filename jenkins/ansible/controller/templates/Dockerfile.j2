@@ -1,0 +1,16 @@
+# controller/templates/Dockerfile.j2
+# Jenkins lts-jdk21 버전 사용
+FROM jenkins/jenkins:lts-jdk21
+
+USER root
+
+# 회사 인증서 복사 및 등록
+COPY BHEVS.LOCAL.crt /usr/local/share/ca-certificates/
+COPY eprism-ca.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+
+# Java Keystore에 인증서 추가
+RUN keytool -importcert -noprompt -trustcacerts -alias bhevs-root -file /usr/local/share/ca-certificates/BHEVS.LOCAL.crt -keystore /opt/java/openjdk/lib/security/cacerts -storepass changeit \
+ && keytool -importcert -noprompt -trustcacerts -alias eprism-ca -file /usr/local/share/ca-certificates/eprism-ca.crt -keystore /opt/java/openjdk/lib/security/cacerts -storepass changeit
+
+USER jenkins

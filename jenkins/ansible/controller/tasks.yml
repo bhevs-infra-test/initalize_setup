@@ -1,58 +1,79 @@
-- import_tasks: ../common/tasks.yml
+# controller/tasks.yml
+---
+- name: Jenkins | 1. Docker 빌드를 위한 준비
+  block:
+    - name: 빌드를 위한 임시 디렉터리 생성
+      ansible.builtin.file:
+        path: "{{ jenkins_build_dir }}"
+        state: directory
+        mode: '0755'
 
-- name: Install Docker
-  apt:
-    name: docker.io
-    state: present
-    update_cache: yes
+    - name: 인증서 파일을 빌드 디렉터리로 복사
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "{{ jenkins_build_dir }}/{{ item }}"
+      loop:
+        - "BHEVS.LOCAL.crt"
+        - "eprism-ca.crt"
 
-- name: Check Docker version
-  command: docker --version
-  register: docker_version
+    - name: Dockerfile을 템플릿으로 생성
+      ansible.builtin.template:
+        src: "Dockerfile.j2"
+        dest: "{{ jenkins_build_dir }}/Dockerfile"
 
-- name: Display Docker version
-  debug:
-    msg: "Installed Docker version: {{ docker_version.stdout }}"
-
-- name: Install Java
-  apt:
-    name: openjdk-17-jdk
-    state: present
-
-- name: Add Jenkins GPG key
-  shell: curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
-
-- name: Add Jenkins repository
-  shell: echo 'deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/' | tee /etc/apt/sources.list.d/jenkins.list > /dev/null
-
-- name: apt update
-  apt:
-    update_cache: yes
-
-- name: Install Jenkins
-  apt:
-    name: jenkins
+- name: Jenkins | 2. Docker 볼륨 생성
+  community.docker.docker_volume:
+    name: "{{ jenkins_volume_name }}"
     state: present
 
-- name: Start and enable Jenkins service
-  shell: systemctl start jenkins && systemctl enable jenkins
+- name: Jenkins | 3. Docker 이미지 빌드
+  community.docker.docker_image:
+    name: "{{ jenkins_full_image_name }}"
+    source: build
+    build:
+      path: "{{ jenkins_build_dir }}"
+    state: present
+  # notify: Cleanup build directory <- 핸들러 호출 부분 삭제
 
-- name: Add Jenkins user to Docker group
-  user:
-    name: jenkins
-    groups: docker
-    append: yes
+- name: Jenkins | 4. 기존 Jenkins 컨테이너 중지 및 제거 (멱등성 보장)
+  community.docker.docker_container:
+    name: "{{ jenkins_container_name }}"
+    state: absent
 
-- name: Restart Jenkins service
-  systemd:
-    name: jenkins
-    state: restarted
-    enabled: yes
+- name: Jenkins | 5. Jenkins 컨테이너 실행
+  community.docker.docker_container:
+    name: "{{ jenkins_container_name }}"
+    image: "{{ jenkins_full_image_name }}"
+    state: started
+    detach: yes
+    restart_policy: unless-stopped
+    ports:
+      - "{{ jenkins_host_port_http }}:8080"
+      - "{{ jenkins_host_port_agent }}:50000"
+    volumes:
+      - "{{ jenkins_volume_name }}:/var/jenkins_home"
 
-- name: Get Jenkins initial admin password
-  command: cat /var/lib/jenkins/secrets/initialAdminPassword
-  register: jenkins_admin_password
+- name: Jenkins | 6. 초기 관리자 비밀번호 추출
+  block:
+    - name: 비밀번호가 생성될 때까지 대기 및 추출
+      ansible.builtin.shell:
+        cmd: "docker logs {{ jenkins_container_name }} 2>&1 | grep -o '/var/jenkins_home/secrets/initialAdminPassword' -m 1"
+      register: password_path_result
+      until: password_path_result.stdout != ""
+      retries: 20
+      delay: 5
+      changed_when: false
 
-- name: Display Jenkins initial admin password
-  debug:
-    msg: "Jenkins initial admin password: {{ jenkins_admin_password.stdout }}"
+    - name: 실제 비밀번호 가져오기
+      ansible.builtin.shell:
+        cmd: "docker exec {{ jenkins_container_name }} cat /var/jenkins_home/secrets/initialAdminPassword"
+      register: jenkins_password
+
+    - name: 🔑 Jenkins 초기 비밀번호 출력
+      ansible.builtin.debug:
+        msg: "Jenkins initial password is: {{ jenkins_password.stdout }}"
+
+- name: Jenkins | 7. 빌드 임시 디렉터리 정리
+  ansible.builtin.file:
+    path: "{{ jenkins_build_dir }}"
+    state: absent

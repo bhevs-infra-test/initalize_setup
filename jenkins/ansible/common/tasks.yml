@@ -1,4 +1,4 @@
-# tasks.yml - Initial setup for Ubuntu server and Docker installation
+# common/tasks.yml - Initial setup for Ubuntu server and Docker installation
 
 - name: Cleanup | Remove existing Docker GPG key file
   ansible.builtin.file:
