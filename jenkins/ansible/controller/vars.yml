@@ -1,13 +1,9 @@
 # controller/vars.yml
 ---
-# 빌드를 위한 임시 디렉터리 경로
-jenkins_build_dir: "/tmp/jenkins_build_{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
+# Jenkins 실행을 위한 변수
 
-# 도커 이미지 정보
-# 태그는 현재 날짜(YYMMDD)로 자동 생성됩니다.
-jenkins_image_name: "bhevs-jenkins-21"
-jenkins_image_tag: "{{ lookup('pipe', 'date +%y%m%d') }}"
-jenkins_full_image_name: "{{ jenkins_image_name }}:{{ jenkins_image_tag }}"
+# 사용할 공식 Jenkins 이미지
+jenkins_image_official: "jenkins/jenkins:lts-jdk21"
 
 # 도커 컨테이너 및 볼륨 정보
 jenkins_container_name: "bhevs-jenkins"

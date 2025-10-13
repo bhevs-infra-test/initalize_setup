@@ -1,50 +1,21 @@
 # controller/tasks.yml
 ---
-- name: Jenkins | 1. Docker 빌드를 위한 준비
-  block:
-    - name: 빌드를 위한 임시 디렉터리 생성
-      ansible.builtin.file:
-        path: "{{ jenkins_build_dir }}"
-        state: directory
-        mode: '0755'
-
-    - name: 인증서 파일을 빌드 디렉터리로 복사
-      ansible.builtin.copy:
-        src: "{{ item }}"
-        dest: "{{ jenkins_build_dir }}/{{ item }}"
-      loop:
-        - "BHEVS.LOCAL.crt"
-        - "eprism-ca.crt"
-
-    - name: Dockerfile을 템플릿으로 생성
-      ansible.builtin.template:
-        src: "Dockerfile.j2"
-        dest: "{{ jenkins_build_dir }}/Dockerfile"
-
-- name: Jenkins | 2. Docker 볼륨 생성
+- name: Jenkins | 1. Docker 볼륨 생성
   community.docker.docker_volume:
     name: "{{ jenkins_volume_name }}"
     state: present
 
-- name: Jenkins | 3. Docker 이미지 빌드
-  community.docker.docker_image:
-    name: "{{ jenkins_full_image_name }}"
-    source: build
-    build:
-      path: "{{ jenkins_build_dir }}"
-    state: present
-  # notify: Cleanup build directory <- 핸들러 호출 부분 삭제
-
-- name: Jenkins | 4. 기존 Jenkins 컨테이너 중지 및 제거 (멱등성 보장)
+- name: Jenkins | 2. 기존 Jenkins 컨테이너 중지 및 제거 (멱등성 보장)
   community.docker.docker_container:
     name: "{{ jenkins_container_name }}"
     state: absent
 
-- name: Jenkins | 5. Jenkins 컨테이너 실행
+- name: Jenkins | 3. Jenkins 컨테이너 실행 (공식 이미지 사용)
   community.docker.docker_container:
     name: "{{ jenkins_container_name }}"
-    image: "{{ jenkins_full_image_name }}"
+    image: "{{ jenkins_image_official }}" # <- 공식 이미지 변수 사용
     state: started
+    pull: yes # 이미지가 로컬에 없을 경우 Docker Hub에서 받아오도록 설정
     detach: yes
     restart_policy: unless-stopped
     ports:
@@ -53,9 +24,9 @@
     volumes:
       - "{{ jenkins_volume_name }}:/var/jenkins_home"
 
-- name: Jenkins | 6. 초기 관리자 비밀번호 추출
+- name: Jenkins | 4. 초기 관리자 비밀번호 추출
   block:
-    - name: 비밀번호가 생성될 때까지 대기 및 추출
+    - name: 비밀번호가 생성될 때까지 대기 및 경로 확인
       ansible.builtin.shell:
         cmd: "docker logs {{ jenkins_container_name }} 2>&1 | grep -o '/var/jenkins_home/secrets/initialAdminPassword' -m 1"
       register: password_path_result
@@ -72,8 +43,3 @@
     - name: 🔑 Jenkins 초기 비밀번호 출력
       ansible.builtin.debug:
         msg: "Jenkins initial password is: {{ jenkins_password.stdout }}"
-
-- name: Jenkins | 7. 빌드 임시 디렉터리 정리
-  ansible.builtin.file:
-    path: "{{ jenkins_build_dir }}"
-    state: absent
