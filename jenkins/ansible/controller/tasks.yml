@@ -35,7 +35,7 @@
   block:
     - name: Wait for the password to be generated and path to appear in logs
       ansible.builtin.shell:
-        cmd: "docker logs {{ jenkins_cssontainer_name }} 2>&1 | grep -o '/var/jenkins_home/secrets/initialAdminPassword' -m 1"
+        cmd: "docker logs {{ jenkins_container_name }} 2>&1 | grep -o '/var/jenkins_home/secrets/initialAdminPassword' -m 1"
       register: password_path_result
       until: password_path_result.stdout != ""
       retries: 20
