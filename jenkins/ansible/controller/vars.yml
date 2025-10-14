@@ -8,5 +8,6 @@ jenkins_image_official: "jenkins/jenkins:lts-jdk21"
 # 도커 컨테이너 및 볼륨 정보
 jenkins_container_name: "bhevs-jenkins"
 jenkins_volume_name: "jenkins_data"
+jenkins_network_name: "jenkins-net"
 jenkins_host_port_http: "80"
 jenkins_host_port_agent: "50000"
