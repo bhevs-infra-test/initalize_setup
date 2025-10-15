@@ -1,4 +1,4 @@
-# ssl/tasks.yml
+# nginx/tasks.yml
 ---
 - name: SSL | Create a directory for certificates on the server
   ansible.builtin.file:

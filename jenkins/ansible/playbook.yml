@@ -3,18 +3,19 @@
   vars_files:
     - docker/vars.yml
     - jenkins/vars.yml
-    - ssl/vars.yml
+    - nginx/vars.yml
+    - nginx/secrets.yml
   tasks:
     - import_tasks: docker/tasks.yml
     - import_tasks: jenkins/tasks.yml
-    - import_tasks: ssl/tasks.yml
+    - import_tasks: nginx/tasks.yml
 
 #- hosts: test
 #  vars_files:
 #    - docker/vars.yml
 #    - jenkins/vars.yml
-#    - ssl/vars.yml
+#    - nginx/vars.yml
 #  tasks:
 #    - import_tasks: docker/tasks.yml
 #    - import_tasks: jenkins/tasks.yml
-#    - import_tasks: ssl/tasks.yml
+#    - import_tasks: nginx/tasks.yml

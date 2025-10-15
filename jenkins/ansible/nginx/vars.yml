@@ -1,15 +1,6 @@
-# ssl/vars.yml
-## --- 사용자 수정 필요 --- ##
-# 1. 미래에 사용할 실제 젠킨스 도메인
+# nginx/vars.yml
+# 젠킨스 도메인
 jenkins_domain: "jenkins.bhevs.co.kr"
-
-## --- 사용자 수정 필요 --- ##
-pfx_local_path: "/path/to/your/certificate.pfx"
-
-## --- 사용자 수정 필요 --- ##
-# 3. .pfx 파일의 비밀번호 (보안을 위해 Ansible Vault 사용 권장)
-pfx_password: "your_pfx_password_here"
-
 
 # --- 아래는 기존 jenkins/vars.yml과 일치시켜야 하는 값 ---
 jenkins_container_name: "bhevs-jenkins"
