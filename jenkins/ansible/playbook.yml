@@ -1,16 +1,16 @@
 ---
 - hosts: controller
   vars_files:
-    - common/vars.yml
-    - controller/vars.yml
+    - docker/vars.yml
+    - jenkins/vars.yml
   tasks:
-    - import_tasks: common/tasks.yml
-    - import_tasks: controller/tasks.yml
+    - import_tasks: docker/tasks.yml
+    - import_tasks: jenkins/tasks.yml
 
-#- hosts: worker
+#- hosts: agent
 #  vars_files:
-#    - common/vars.yml
-#    - worker/vars.yml
+#    - docker/vars.yml
+#    - jenkins/vars.yml
 #  tasks:
-#    - import_tasks: common/tasks.yml
-#    - import_tasks: worker/tasks.yml
+#    - import_tasks: docker/tasks.yml
+#    - import_tasks: jenkins/tasks.yml
