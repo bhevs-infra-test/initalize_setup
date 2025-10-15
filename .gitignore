@@ -3,8 +3,9 @@
 
 ### Ansible ###
 *.retry
-*hosts.ini
-*ansible.cfg
+#*hosts.ini
+#*ansible.cfg
+
 ### Git ###
 # Created by git for backups. To disable backups in Git:
 # $ git config --global mergetool.keepBackup false
