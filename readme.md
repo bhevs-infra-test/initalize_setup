@@ -1,4 +1,29 @@
 ## BHEVS Infra
+
+### Directory Information
+#### Git
+- login.sh: infra repository를 사용하기 위한 login
+
+#### jenkins
+- ansible: 대상 서버 설정용 ansible playbook
+  - 폴더: 설치 패키지는 폴더로 모듈화
+  - .vault_pass_secret: ansible vault 비밀번호 파일
+  - ansible.cfg: ansible 설정 파일
+  - ansible_check.sh: ansible 적용 전 점검용 스크립트
+  - hosts.ini: ansible 대상 서버 정보
+  - playbook.yml: ansible playbook 파일
+  - 
+- nopasswd: ansible에서 sudo 명령어를 비밀번호 없이 사용하기 위한 설정 파일
+  - nopasswd.env: 설정 정보
+  - nopasswd_init.sh: 설정
+
+#### wsl
+local-pc에서 wsl 개인화 설정용도
+- server_init.sh: 패키지 설치
+- ssh_config.env: ssh key 설정 정보
+- wsl_init.sh: ssh 설정
+
+
 ### Convention
 1 Action 1 Commit
 
