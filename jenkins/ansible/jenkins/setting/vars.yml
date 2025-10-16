@@ -1,0 +1,9 @@
+# jenkins/setting/vars.yml
+---
+# User Managed Data
+jenkins_url: "https://192.168.37.239"
+cli_dest_path: "/home/{{ ansible_user | default(lookup('env', 'USER')) }}/jenkins-cli.jar"
+
+# Jenkins Plugins to install
+jenkins_plugins:
+  - role-strategy

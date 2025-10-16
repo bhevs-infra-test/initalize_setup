@@ -1,0 +1,19 @@
+// Assigns selected roles to a user
+import jenkins.model.*
+import com.michelin.cio.hudson.plugins.rolestrategy.*
+
+def jenkins = Jenkins.instance
+def strategy = jenkins.getAuthorizationStrategy()
+def username = "{{ target_user }}"
+
+{% if selected_global_role != 'none' %}
+strategy.addSidToRole("GLOBAL", "{{ selected_global_role }}", username)
+println "Success: Assigned Global Role [{{ selected_global_role }}] to user [${username}]."
+{% endif %}
+
+{% if selected_project_role != 'none' %}
+strategy.addSidToRole("PROJECT", "{{ selected_project_role }}", username)
+println "Success: Assigned Project Role [{{ selected_project_role }}] to user [${username}]."
+{% endif %}
+
+strategy.save()

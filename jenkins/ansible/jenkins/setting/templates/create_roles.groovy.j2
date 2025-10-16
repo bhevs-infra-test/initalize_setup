@@ -1,0 +1,25 @@
+// Creates global and item roles
+import jenkins.model.*
+import com.michelin.cio.hudson.plugins.rolestrategy.*
+import hudson.security.Permission
+
+def jenkins = Jenkins.instance
+def strategy = jenkins.getAuthorizationStrategy()
+def roleMap = strategy.getRoleMaps()
+
+// Global Roles
+def adminRole = new Role("admin", ".*", [Permission.all()] as Set)
+roleMap["GLOBAL"].addRole(adminRole)
+
+def viewerRole = new Role("viewer", ".*", [Permission.find("Overall/Read")] as Set)
+roleMap["GLOBAL"].addRole(viewerRole)
+
+// Item Roles
+def projectViewerRole = new Role("{{ project_role_name }}", "{{ project_pattern }}", [
+  Permission.find("Job/Read"),
+  Permission.find("Job/Discover")
+] as Set)
+roleMap["PROJECT"].addRole(projectViewerRole)
+
+strategy.save()
+println "Success: Roles 'admin', 'viewer', and '{{ project_role_name }}' were created or updated."

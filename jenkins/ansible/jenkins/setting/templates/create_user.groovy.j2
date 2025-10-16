@@ -1,0 +1,21 @@
+// Creates a new user in Jenkins
+import jenkins.model.*
+import hudson.security.*
+
+def jenkins = Jenkins.instance
+def securityRealm = jenkins.getSecurityRealm()
+
+def username = "{{ new_username }}"
+def password = "{{ new_password }}"
+def fullName = "{{ new_fullname }}"
+def email = "{{ new_email }}"
+
+if (securityRealm.getUser(username) != null) {
+  println "Error: User '${username}' already exists."
+  System.exit(1)
+}
+
+def newUser = securityRealm.createAccount(username, password)
+newUser.setFullName(fullName)
+newUser.addProperty(new hudson.tasks.Mailer.UserProperty(email))
+println "Success: User '${username}' was created."
