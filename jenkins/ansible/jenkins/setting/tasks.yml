@@ -36,28 +36,6 @@
       loop: "{{ jenkins_plugins }}"
       notify: restart jenkins
 
-- name: "BLOCK: Create a Jenkins User"
-  tags: jenkins_create_user
-  block:
-    - name: "Prompt for new user details"
-      vars_prompt:
-        - { name: "new_username", prompt: "Enter the username to create", private: no }
-        - { name: "new_password", prompt: "Enter the password for the new user", private: yes }
-        - { name: "new_fullname", prompt: "Enter the full name of the user", private: no }
-        - { name: "new_email", prompt: "Enter the email address of the user", private: no }
-
-    - name: "Render Groovy script for user creation"
-      template:
-        src: jenkins/setting/templates/create_user.groovy.j2
-        dest: /tmp/create_user.groovy
-
-    - name: "Execute user creation via Jenkins CLI"
-      shell: >
-        java -jar {{ cli_dest_path }} -s {{ jenkins_url }} -auth {{ jenkins_admin_user }}:{{ jenkins_admin_api_token }}
-        groovy = < /tmp/create_user.groovy -noCertificateCheck
-      register: result
-    - debug: msg="{{ result.stdout }}"
-
 - name: "BLOCK: Create Jenkins Roles"
   tags: jenkins_create_roles
   block:
@@ -78,13 +56,18 @@
       register: result
     - debug: msg="{{ result.stdout }}"
 
-- name: "BLOCK: Assign Roles to a User (Dynamic)"
-  tags: jenkins_assign_roles
+- name: "BLOCK: Create User with Roles (Interactive)"
+  tags: jenkins_create_user_with_roles
   block:
-    - name: "Prompt for target user"
+    # --- Part 1: Get User Details ---
+    - name: "Prompt for new user details"
       vars_prompt:
-        - { name: "target_user", prompt: "Enter the username to assign roles to", private: no }
+        - { name: "new_username", prompt: "Enter the username to create", private: no }
+        - { name: "new_password", prompt: "Enter the password for the new user", private: yes }
+        - { name: "new_fullname", prompt: "Enter the full name of the user", private: no }
+        - { name: "new_email", prompt: "Enter the email address of the user", private: no }
 
+    # --- Part 2: Fetch and Select Roles ---
     - name: "Fetch current list of roles from Jenkins"
       shell: >
         java -jar {{ cli_dest_path }} -s {{ jenkins_url }} -auth {{ jenkins_admin_user }}:{{ jenkins_admin_api_token }}
@@ -116,22 +99,3 @@
           0. None
           {% for role in project_roles %}
           {{ loop.index }}. {{ role }}
-          {% endfor %}
-      register: project_choice
-
-    - name: "Set facts for selected roles"
-      set_fact:
-        selected_global_role: "{{ (global_choice.user_input | int == 0) | ternary('none', global_roles[global_choice.user_input | int - 1]) }}"
-        selected_project_role: "{{ (project_choice.user_input | int == 0) | ternary('none', project_roles[project_choice.user_input | int - 1]) }}"
-
-    - name: "Render Groovy script for role assignment"
-      template:
-        src: jenkins/setting/templates/assign_role.groovy.j2
-        dest: /tmp/assign_role.groovy
-
-    - name: "Execute role assignment via Jenkins CLI"
-      shell: >
-        java -jar {{ cli_dest_path }} -s {{ jenkins_url }} -auth {{ jenkins_admin_user }}:{{ jenkins_admin_api_token }}
-        groovy = < /tmp/assign_role.groovy -noCertificateCheck
-      register: result
-    - debug: msg="{{ result.stdout_lines }}"

@@ -10,22 +10,13 @@
     - jenkins/setting/secrets.yml
 
   tasks:
-    - import_tasks: docker/tasks.yml
-    - import_tasks: jenkins/tasks.yml
-    - import_tasks: nginx/tasks.yml
-    - import_tasks: jenkins/setting/tasks.yml
-
-#- hosts: test
-#  vars_files:
-#    - docker/vars.yml
-#    - jenkins/vars.yml
-#    - nginx/vars.yml
-#  tasks:
 #    - import_tasks: docker/tasks.yml
 #    - import_tasks: jenkins/tasks.yml
 #    - import_tasks: nginx/tasks.yml
-  handlers: # restart jenkins after setting up
-    - name: "Restart Jenkins Service"
+    - import_tasks: jenkins/setting/tasks.yml
+
+  handlers:
+    - name: restart jenkins
       community.general.jenkins_command:
         command: safe-restart
         url: "{{ jenkins_url }}"

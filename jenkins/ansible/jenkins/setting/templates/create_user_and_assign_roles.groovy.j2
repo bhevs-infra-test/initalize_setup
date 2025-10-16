@@ -1,0 +1,44 @@
+# jenkins/setting/templates/create_user_and_assign_roles.groovy.j2
+#
+# Creates a new user and immediately assigns selected roles.
+#
+import jenkins.model.*
+import hudson.security.*
+import com.michelin.cio.hudson.plugins.rolestrategy.*
+
+def jenkins = Jenkins.instance
+def securityRealm = jenkins.getSecurityRealm()
+def strategy = jenkins.getAuthorizationStrategy()
+
+// --- User Details ---
+def username = "{{ new_username }}"
+def password = "{{ new_password }}"
+def fullName = "{{ new_fullname }}"
+def email = "{{ new_email }}"
+
+// --- Role Details ---
+def globalRole = "{{ selected_global_role }}"
+def projectRole = "{{ selected_project_role }}"
+
+// Step 1: Create the user
+if (securityRealm.getUser(username) != null) {
+  println "Error: User '${username}' already exists."
+  System.exit(1)
+}
+def newUser = securityRealm.createAccount(username, password)
+newUser.setFullName(fullName)
+newUser.addProperty(new hudson.tasks.Mailer.UserProperty(email))
+println "Success: User '${username}' was created."
+
+// Step 2: Assign roles to the new user
+if (globalRole != 'none') {
+  strategy.addSidToRole("GLOBAL", globalRole, username)
+  println "Success: Assigned Global Role [${globalRole}] to user [${username}]."
+}
+
+if (projectRole != 'none') {
+  strategy.addSidToRole("PROJECT", projectRole, username)
+  println "Success: Assigned Project Role [${projectRole}] to user [${username}]."
+}
+
+strategy.save()
