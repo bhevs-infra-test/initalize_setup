@@ -13,9 +13,10 @@
   - hosts.ini: ansible 대상 서버 정보
   - playbook.yml: ansible playbook 파일
   - 
-- nopasswd: ansible에서 sudo 명령어를 비밀번호 없이 사용하기 위한 설정 파일
-  - nopasswd.env: 설정 정보
-  - nopasswd_init.sh: 설정
+- server_initialize: 서버 초기 설정용 스크립트
+  - server.env: server 정보
+  - set_nopasswd.sh: sudo nopasswd 설정
+  - set_timezone.sh: timezone 설정
 
 #### wsl
 local-pc에서 wsl 개인화 설정용도
