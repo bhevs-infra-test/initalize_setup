@@ -1,19 +1,32 @@
+# jenkins/tasks.yml
 ---
 - name: Jenkins | Create Docker volume
   community.docker.docker_volume:
     name: "{{ jenkins_volume_name }}"
     state: present
+  tags:
+    - jenkins
+    - setup
+    - volume
 
 - name: Jenkins | Stop and remove existing Jenkins container (ensuring idempotence)
   community.docker.docker_container:
     name: "{{ jenkins_container_name }}"
     state: absent
+  tags:
+    - jenkins
+    - setup
+    - cleanup
 
 - name: Jenkins | Create Docker network
   community.docker.docker_network:
     name: "{{ jenkins_network_name }}"
     driver: bridge
     state: present
+  tags:
+    - jenkins
+    - setup
+    - network
 
 - name: Jenkins | Run Jenkins container (using official image)
   community.docker.docker_container:
@@ -30,6 +43,10 @@
       - "{{ jenkins_volume_name }}:/var/jenkins_home"
     networks:
       - name: "{{ jenkins_network_name }}"
+  tags:
+    - jenkins
+    - run
+    - container
 
 - name: Jenkins | Extract initial admin password
   block:
@@ -47,6 +64,10 @@
         cmd: "docker exec {{ jenkins_container_name }} cat /var/jenkins_home/secrets/initialAdminPassword"
       register: jenkins_password
 
-    - name: 🔑 Display the Jenkins initial password
+    - name: Display the Jenkins initial password
       ansible.builtin.debug:
         msg: "Jenkins initial password is: {{ jenkins_password.stdout }}"
+  tags:
+    - jenkins
+    - debug
+    - password

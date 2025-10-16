@@ -5,34 +5,54 @@
     path: "{{ certs_remote_dir }}"
     state: directory
     mode: '0755'
+  tags:
+    - nginx
+    - ssl
+    - setup
 
 - name: SSL | Copy PFX file from local to server
   ansible.builtin.copy:
     src: "{{ pfx_local_path }}"
     dest: "{{ certs_remote_dir }}/cert.pfx"
     mode: '0600'
+  tags:
+    - nginx
+    - ssl
+    - setup
 
 - name: SSL | Extract private key from PFX file
   ansible.builtin.shell:
     cmd: "openssl pkcs12 -in {{ certs_remote_dir }}/cert.pfx -nocerts -out {{ certs_remote_dir }}/jenkins.key -nodes -passin pass:{{ pfx_password }}"
   no_log: true
   changed_when: false
+  tags:
+    - nginx
+    - ssl
+    - setup
 
 - name: SSL | Extract certificate from PFX file
   ansible.builtin.shell:
     cmd: "openssl pkcs12 -in {{ certs_remote_dir }}/cert.pfx -nokeys -out {{ certs_remote_dir }}/jenkins.crt -passin pass:{{ pfx_password }}"
   no_log: true
   changed_when: false
+  tags:
+    - nginx
+    - ssl
+    - setup
 
 - name: Jenkins | Stop and remove the existing Jenkins container
   community.docker.docker_container:
     name: "{{ jenkins_container_name }}"
     state: absent
+  tags:
+    - nginx
+    - jenkins
+    - run
 
 - name: Jenkins | Re-run Jenkins container for internal access only
   community.docker.docker_container:
     name: "{{ jenkins_container_name }}"
-    image: "jenkins/jenkins:lts-jdk21" # jenkins/vars.yml의 이미지와 동일하게
+    image: "jenkins/jenkins:lts-jdk21"
     state: started
     restart_policy: unless-stopped
     expose:
@@ -42,16 +62,28 @@
       - "{{ jenkins_volume_name }}:/var/jenkins_home"
     networks:
       - name: "{{ jenkins_network_name }}"
+  tags:
+    - nginx
+    - jenkins
+    - run
 
 - name: Nginx | Create configuration from template
   ansible.builtin.template:
     src: templates/nginx.conf.j2
     dest: "/tmp/nginx.conf"
+  tags:
+    - nginx
+    - config
+    - setup
 
 - name: Nginx | Stop and remove existing Nginx container
   community.docker.docker_container:
     name: "{{ nginx_container_name }}"
     state: absent
+  tags:
+    - nginx
+    - run
+    - cleanup
 
 - name: Nginx | Run Nginx reverse proxy container
   community.docker.docker_container:
@@ -67,7 +99,14 @@
       - "{{ certs_remote_dir }}:{{ certs_remote_dir }}:ro"
     networks:
       - name: "{{ jenkins_network_name }}"
+  tags:
+    - nginx
+    - run
+    - container
 
 - name: System | Display success message
   ansible.builtin.debug:
     msg: "✅ SSL setup is complete. Access Jenkins at https://{{ jenkins_domain }}"
+  tags:
+    - nginx
+    - debug

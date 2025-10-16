@@ -1,8 +1,8 @@
 # nginx/vars.yml
-# 젠킨스 도메인
+# Domain
 jenkins_domain: "jenkins.bhevs.co.kr"
 
-# --- 아래는 기존 jenkins/vars.yml과 일치시켜야 하는 값 ---
+# Jenkins SSL Certificate Variables
 jenkins_container_name: "bhevs-jenkins"
 jenkins_network_name: "jenkins-net"
 jenkins_volume_name: "jenkins_data"
