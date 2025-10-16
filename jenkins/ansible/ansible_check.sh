@@ -17,7 +17,7 @@ echo "✅ SUCCESS: PING/SUDO ACCESS verified."
 
 # 2. Playbook Syntax Check
 echo "--- 2/3: Syntax check..."
-ansible-playbook ${PLAYBOOK_FILE} --syntax-check > /dev/null 2>&1
+ansible-playbook ${PLAYBOOK_FILE} --vault-password-file .vault_pass_secrets --syntax-check > /dev/null 2>&1
 
 if [ $? -ne 0 ]; then
     echo "❌ FAILED: Playbook SYNTAX failed."
@@ -27,7 +27,7 @@ echo "✅ SUCCESS: Syntax check passed."
 
 # 3. Dry Run (Check for Changes)
 echo "--- 3/3: Dry Run check (Previewing changes)..."
-ansible-playbook ${PLAYBOOK_FILE} --check > /dev/null 2>&1
+ansible-playbook ${PLAYBOOK_FILE} --vault-password-file .vault_pass_secrets --check > /dev/null 2>&1
 
 if [ $? -ne 0 ]; then
     echo "❌ FAILED: Dry Run (Check) failed."
