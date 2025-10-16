@@ -34,7 +34,16 @@
         token: "{{ jenkins_admin_api_token }}"
         validate_certs: no
       loop: "{{ jenkins_plugins }}"
-      notify: restart jenkins
+      register: plugin_install_result
+
+    - name: "Restart Jenkins if plugins were changed"
+      community.general.jenkins_command:
+        command: safe-restart
+        url: "{{ jenkins_url }}"
+        user: "{{ jenkins_admin_user }}"
+        token: "{{ jenkins_admin_api_token }}"
+        validate_certs: no
+      when: plugin_install_result.changed
 
 - name: "BLOCK: Create Jenkins Roles"
   tags: jenkins_create_roles

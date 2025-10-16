@@ -14,12 +14,3 @@
 #    - import_tasks: jenkins/tasks.yml
 #    - import_tasks: nginx/tasks.yml
     - import_tasks: jenkins/setting/tasks.yml
-
-  handlers:
-    - name: restart jenkins
-      community.general.jenkins_command:
-        command: safe-restart
-        url: "{{ jenkins_url }}"
-        user: "{{ jenkins_admin_user }}"
-        token: "{{ jenkins_admin_api_token }}"
-        validate_certs: no
