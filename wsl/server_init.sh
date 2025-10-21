@@ -15,6 +15,7 @@ sudo apt-get install -y \
   wget \
   xclip \
   ansible \
+  telnet \
   p7zip
 
 
