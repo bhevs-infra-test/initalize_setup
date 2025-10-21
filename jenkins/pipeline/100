@@ -1,0 +1,137 @@
+pipeline {
+    agent { label 'windows-server-agent' }
+
+    environment {
+        GIT_CREDENTIALS_ID = 'teamforge-choiseu'
+        BUILD_OUTPUT_PATH = 'renault_gen3_odc_appl/Renault_Gen3/Appl/MakeBin'
+        GIT_BASE_URL = 'https://teamforge.bhevs.co.kr/gerrit'
+
+        // NAS PATH SETTING
+        NAS_TARGET_PATH = '\\\\your-nas-server\\share\\builds\\${env.BUILD_NUMBER}'
+    }
+
+    stages {
+        stage('1. Source Checkout') {
+            steps {
+                timeout(time: 10, unit: 'MINUTES') {
+                    script {
+                        echo "Cloning 1. renault_gen3_fbl..."
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: 'renault_gen3_SWEET100_release']],
+                            userRemoteConfigs: [[
+                                credentialsId: env.GIT_CREDENTIALS_ID,
+                                url: "${env.GIT_BASE_URL}/renault_gen3_fbl"
+                            ]],
+                            extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'renault_gen3_fbl']]
+                        ])
+
+                        echo "Cloning 2. renault_gen3_odc_appl..."
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: 'renault_gen3_SWEET100_release']],
+                            userRemoteConfigs: [[
+                                credentialsId: env.GIT_CREDENTIALS_ID,
+                                url: "${env.GIT_BASE_URL}/renault_gen3_odc_appl"
+                            ]],
+                            extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'renault_gen3_odc_appl']]
+                        ])
+
+                        echo "Cloning 3. renault_gen3_platform_common..."
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: 'renault_gen3_SWEET100_release']],
+                            userRemoteConfigs: [[
+                                credentialsId: env.GIT_CREDENTIALS_ID,
+                                url: "${env.GIT_BASE_URL}/renault_gen3_platform_common"
+                            ]],
+                            extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'renault_gen3_platform_common']]
+                        ])
+
+                        echo "Cloning 4. renault_gen3_platform_wlc..."
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: 'renault_gen3_SWEET400_release']],
+                            userRemoteConfigs: [[
+                                credentialsId: env.GIT_CREDENTIALS_ID,
+                                url: "${env.GIT_BASE_URL}/renault_gen3_platform_wlc"
+                            ]],
+                            extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'renault_gen3_platform_wlc']]
+                        ])
+
+                        echo "Cloning 5. renault_gen3_platform_wlc_inc..."
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: 'renault_gen3_SWEET400_release']],
+                            userRemoteConfigs: [[
+                                credentialsId: env.GIT_CREDENTIALS_ID,
+                                url: "${env.GIT_BASE_URL}/renault_gen3_platform_wlc_inc"
+                            ]],
+                            extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'renault_gen3_platform_wlc_inc']]
+                        ])
+                    }
+                }
+            }
+        }
+
+        stage('2. Build Execution') {
+            steps {
+                script {
+                    def BM_HEX_FILE = 'Renault_Bm.hex'
+                    def FBL_HEX_FILE = 'Renault_Fbl.hex'
+
+                    def TARGET_PATH = "${env.WORKSPACE}\\${env.BUILD_OUTPUT_PATH.replace('/', '\\')}"
+
+                    def BM_SOURCE_PATH = "${env.WORKSPACE}\\renault_gen3_fbl\\Renault_Gen3\\Bm\\Appl\\${BM_HEX_FILE}"
+                    def FBL_SOURCE_PATH = "${env.WORKSPACE}\\renault_gen3_fbl\\Renault_Gen3\\Fbl\\Appl\\${FBL_HEX_FILE}" // 수정된 변수 사용
+
+                    echo "Ensuring target directory exists: ${TARGET_PATH}"
+                    bat "IF NOT EXIST \"${TARGET_PATH}\" MKDIR \"${TARGET_PATH}\""
+
+                    echo '--- Starting BM Build ---'
+                    dir('renault_gen3_fbl/Renault_Gen3/Bm/Appl') {
+                        bat script: 'b -j16', returnStatus: true
+                    }
+                    echo "Copying ${BM_SOURCE_PATH} to ${TARGET_PATH}"
+                    bat "COPY /Y \"${BM_SOURCE_PATH}\" \"${TARGET_PATH}\""
+
+                    echo '--- Starting FBL Build ---'
+                    dir('renault_gen3_fbl/Renault_Gen3/Fbl/Appl') {
+                        bat script: 'b -j16', returnStatus: true
+                    }
+
+                    echo "Copying ${FBL_SOURCE_PATH} to ${TARGET_PATH}"
+                    bat "COPY /Y \"${FBL_SOURCE_PATH}\" \"${TARGET_PATH}\""
+
+                    echo '--- Starting build_Appl.bat ---'
+                    dir('renault_gen3_odc_appl/Renault_Gen3/Appl') {
+                        bat 'build_Appl.bat'
+                    }
+
+                    echo '--- Starting RN_SW_Image_Maker.bat ---'
+                    dir("${TARGET_PATH}") {
+                        bat '"[OneBin]RN_SW_Image_Maker.bat"'
+                    }
+                }
+            }
+        }
+
+        stage('3. Artifact Transfer (to NAS)') {
+            steps {
+                // NAS로 전송 예정 경로 표시
+                echo "Transferring artifacts from ${env.BUILD_OUTPUT_PATH} to NAS: ${env.NAS_TARGET_PATH}"
+
+                // 빌드 산출물 폴더의 디렉토리 목록 출력
+                echo 'Build Output Directory Listing (Contents of MakeBin):'
+                dir("${env.BUILD_OUTPUT_PATH}") {
+                    bat 'dir'
+                }
+
+                // NAS 전송 명령 (주석 처리 유지)
+                //bat "robocopy \"${env.BUILD_OUTPUT_PATH}\" \"${env.NAS_TARGET_PATH}\" /E /NP /Z"
+
+                echo 'Artifact transfer completed.'
+            }
+        }
+    }
+}
