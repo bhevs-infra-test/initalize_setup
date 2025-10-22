@@ -133,5 +133,41 @@ pipeline {
                 echo 'Artifact transfer completed.'
             }
         }
+
+        stage('4. Send Notification') {
+            steps {
+                script {
+                    if (env.refUpdate_obj_refName) {
+                        echo "Webhook variables detected. Sending notification..."
+                        echo "Project: ${env.refUpdate_obj_project}"
+                        echo "Branch: ${env.refUpdate_obj_refName}"
+                        echo "Pusher Name: ${env.submitter_obj_name}"
+                        echo "Pusher Email: ${env.submitter_obj_email}"
+                        echo "Pusher Username: ${env.submitter_obj_username}"
+                        echo "Old Commit: ${env.refUpdate_obj_oldRev}"
+                        echo "New Commit: ${env.refUpdate_obj_newRev}"
+
+//                        bat """
+//                            chcp 65001
+//
+//                            curl -X POST "http://your-api-server/notify" ^
+//                                 -H "Content-Type: application/json" ^
+//                                 -d "{ \
+//                                      \"name\": \"${env.submitter_obj_name}\", \
+//                                      \"email\": \"${env.submitter_obj_email}\", \
+//                                      \"username\": \"${env.submitter_obj_username}\", \
+//                                      \"refName\": \"${env.refUpdate_obj_refName}\", \
+//                                      \"oldRev\": \"${env.refUpdate_obj_oldRev}\", \
+//                                      \"newRev\": \"${env.refUpdate_obj_newRev}\", \
+//                                      \"project\": \"${env.refUpdate_obj_project}\" \
+//                                    }"
+//                        """
+                    } else {
+                        echo "Webhook variables not found. Skipping notification."
+                        echo "This build was likely triggered manually."
+                    }
+                }
+            }
+        }
     }
 }
