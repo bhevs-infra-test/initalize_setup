@@ -62,6 +62,8 @@
       - "{{ jenkins_volume_name }}:/var/jenkins_home"
     networks:
       - name: "{{ jenkins_network_name }}"
+    env:
+      TZ: "Asia/Seoul"
   tags:
     - nginx
     - jenkins
