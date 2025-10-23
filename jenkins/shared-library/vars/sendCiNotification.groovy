@@ -36,7 +36,7 @@ def call(Map config) {
             
             \$Workspace = "${payload.WORKSPACE}"
             \$BuildOutputPath = "${payload.BUILD_OUTPUT_PATH}"
-            \$BuildOutputPathWin = \$BuildOutputPath.Replace('/', '\')
+            \$BuildOutputPathWin = \$BuildOutputPath.Replace('/', '\\') 
             \$AttachmentDir = Join-Path -Path \$Workspace -ChildPath \$BuildOutputPathWin
             
             \$File1 = Join-Path -Path \$AttachmentDir -ChildPath "Renault_Gen3.pdx"
@@ -108,15 +108,26 @@ def call(Map config) {
             \$SmtpCreds = New-Object System.Management.Automation.PSCredential(\$SmtpUser, (ConvertTo-SecureString \$SmtpPass -AsPlainText -Force))
             
             # --- 이메일 발송 ---
-            Send-MailMessage -From "\$SmtpUser" `
-                             -To "\$SubmitterEmail" `
-                             -Subject \$EmailSubject `
-                             -Body \$EmailBody `
-                             -BodyAsHtml `
-                             -Attachments \$ExistingAttachments `
-                             -SmtpServer "gw.bhevs.co.kr" `
-                             -Credential \$SmtpCreds `
-                             -Encoding ([System.Text.Encoding]::UTF8)
+            \$MailParams = @{
+                From = \$SmtpUser
+                To = \$SubmitterEmail
+                Subject = \$EmailSubject
+                Body = \$EmailBody
+                BodyAsHtml = \$true
+                SmtpServer = "gw.bhevs.co.kr"
+                Credential = \$SmtpCreds
+                Encoding = ([System.Text.Encoding]::UTF8)
+            }
+
+            if (\$ExistingAttachments.Count -gt 0) {
+                \$MailParams.Add('Attachments', \$ExistingAttachments)
+                Write-Host "[Notification] Sending email to \${SubmitterEmail} with \${ExistingAttachments.Count} attachments."
+            } else {
+                Write-Host "[Notification] Sending email to \${SubmitterEmail} without attachments."
+            }
+
+            # Splatting을 사용하여 명령어 실행
+            Send-MailMessage @MailParams
         """
     }
 }
