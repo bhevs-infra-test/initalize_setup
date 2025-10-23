@@ -1,3 +1,5 @@
+@Library('bhevs-shared-library') _
+
 pipeline {
     agent { label 'windows-server-agent' }
 
@@ -5,9 +7,6 @@ pipeline {
         GIT_CREDENTIALS_ID = 'teamforge-choiseu'
         BUILD_OUTPUT_PATH = 'renault_gen3_odc_appl/Renault_Gen3/Appl/MakeBin'
         GIT_BASE_URL = 'https://teamforge.bhevs.co.kr/gerrit'
-
-        // NAS PATH SETTING
-        NAS_TARGET_PATH = '\\\\your-nas-server\\share\\builds\\${env.BUILD_NUMBER}'
     }
 
     stages {
@@ -115,77 +114,12 @@ pipeline {
                 }
             }
         }
+    }
 
-        stage('3. Artifact Transfer (to NAS)') {
-            steps {
-                // NAS로 전송 예정 경로 표시
-                echo "Transferring artifacts from ${env.BUILD_OUTPUT_PATH} to NAS: ${env.NAS_TARGET_PATH}"
-
-                // 빌드 산출물 폴더의 디렉토리 목록 출력
-                echo 'Build Output Directory Listing (Contents of MakeBin):'
-                dir("${env.BUILD_OUTPUT_PATH}") {
-                    bat 'dir'
-                }
-
-                // NAS 전송 명령
-//                bat "robocopy \"${env.BUILD_OUTPUT_PATH}\" \"${env.NAS_TARGET_PATH}\" /E /NP /Z"
-
-                echo 'Artifact transfer completed.'
-            }
-        }
-
-        stage('4. Send Notification') {
-            steps {
-                script {
-                    if (env.change_obj_branch) {
-                        echo "Webhook variables detected (Event: change-merged). Sending notification..."
-
-                        echo "--- Submitter ---"
-                        echo "Name: ${env.submitter_obj_name}"
-                        echo "Email: ${env.submitter_obj_email}"
-                        echo "Username: ${env.submitter_obj_username}"
-
-                        echo "--- Uploader ---"
-                        echo "Uploader Name: ${env.patchSet_obj_uploader_name}"
-                        echo "Uploader Email: ${env.patchSet_obj_uploader_email}"
-                        echo "Uploader Username: ${env.patchSet_obj_uploader_username}"
-
-                        echo "--- Change ---"
-                        echo "Project: ${env.change_obj_project}"
-                        echo "Branch: ${env.change_obj_branch}"
-                        echo "Change ID: ${env.change_obj_id}"
-                        echo "Change Number: ${env.change_obj_number}"
-                        echo "Subject: ${env.change_obj_subject}"
-                        echo "URL: ${env.change_obj_url}"
-                        echo "Commit Message: ${env.change_obj_commitMessage}"
-                        echo "Status: ${env.change_obj_status}"
-
-//                        bat """
-//                            chcp 65001
-//                            curl -X POST "http://your-api-server/notify" ^
-//                                 -H "Content-Type: application/json" ^
-//                                 -d "{ \
-//                                      \"submitter_name\": \"${env.submitter_obj_name}\", \
-//                                      \"submitter_email\": \"${env.submitter_obj_email}\", \
-//                                      \"submitter_username\": \"${env.submitter_obj_username}\", \
-//                                      \"patch_revision\": \"${env.patchSet_obj_revision}\", \
-//                                      \"patch_insertions\": \"${env.patchSet_obj_sizeInsertions}\", \
-//                                      \"patch_deletions\": \"${env.patchSet_obj_sizeDeletions}\", \
-//                                      \"change_project\": \"${env.change_obj_project}\", \
-//                                      \"change_branch\": \"${env.change_obj_branch}\", \
-//                                      \"change_id\": \"${env.change_obj_id}\", \
-//                                      \"change_number\": \"${env.change_obj_number}\", \
-//                                      \"change_subject\": \"${env.change_obj_subject}\", \
-//                                      \"change_url\": \"${env.change_obj_url}\", \
-//                                      \"change_commitMessage\": \"${env.change_obj_commitMessage}\", \
-//                                      \"change_status\": \"${env.change_obj_status}\" \
-//                                    }"
-//                        """
-                    } else {
-                        echo "Webhook variables not found. Skipping notification."
-                        echo "This build was likely triggered manually."
-                    }
-                }
+    post {
+        always {
+            script {
+                sendCiNotification(buildStatus: currentBuild.currentResult, payload: env)
             }
         }
     }
