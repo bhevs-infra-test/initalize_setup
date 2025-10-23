@@ -92,7 +92,7 @@ def call(Map config) {
             <h3>🔗 관련 링크</h3>
             <ul>
                 <li><b>Gerrit 변경 사항:</b> <a href="\${ChangeUrl}">[#\${ChangeNumber}] \${Subject}</a></li>
-                <li><b>Jenkins 빌드 로그:</b> <a href="\${BuildUrl}">\${JobName} #\${BuildNumber}</a></li>
+                <li><b>Jenkins 빌드 로그:</b> <a href="\${BuildUrl}console">\${JobName} #\${BuildNumber} (Console)</a></li>
             </ul>
             <br>
             <h3>📝 상세 정보</h3>
