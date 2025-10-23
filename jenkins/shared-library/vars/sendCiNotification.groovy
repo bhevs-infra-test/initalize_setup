@@ -39,10 +39,9 @@ def call(Map config) {
             \$BuildOutputPathWin = \$BuildOutputPath.Replace('/', '\')
             \$AttachmentDir = Join-Path -Path \$Workspace -ChildPath \$BuildOutputPathWin
             
-            \$FilesToAttach = @(
-                Join-Path -Path \$AttachmentDir -ChildPath "Renault_Gen3.pdx",
-                Join-Path -Path \$AttachmentDir -ChildPath "Renault_Gen3_OneBin.hex"
-            )
+            \$File1 = Join-Path -Path \$AttachmentDir -ChildPath "Renault_Gen3.pdx"
+            \$File2 = Join-Path -Path \$AttachmentDir -ChildPath "Renault_Gen3_OneBin.hex"
+            \$FilesToAttach = @(\$File1, \$File2)
             
             \$ExistingAttachments = @()
             foreach (\$file in \$FilesToAttach) {
