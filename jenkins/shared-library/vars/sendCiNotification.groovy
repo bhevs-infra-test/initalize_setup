@@ -34,9 +34,28 @@ def call(Map config) {
             \$JobName = "${payload.JOB_NAME}"
             \$BuildNumber = "${payload.BUILD_NUMBER}"
             
+            \$Workspace = "${payload.WORKSPACE}"
+            \$BuildOutputPath = "${payload.BUILD_OUTPUT_PATH}"
+            \$BuildOutputPathWin = \$BuildOutputPath.Replace('/', '\')
+            \$AttachmentDir = Join-Path -Path \$Workspace -ChildPath \$BuildOutputPathWin
+            
+            \$FilesToAttach = @(
+                Join-Path -Path \$AttachmentDir -ChildPath "Renault_Gen3.pdx",
+                Join-Path -Path \$AttachmentDir -ChildPath "Renault_Gen3_OneBin.hex"
+            )
+            
+            \$ExistingAttachments = @()
+            foreach (\$file in \$FilesToAttach) {
+                if (Test-Path \$file) {
+                    \$ExistingAttachments += \$file
+                    Write-Host "[Notification] Found attachment: \$file"
+                } else {
+                    Write-Host "[Notification] [Warning] Attachment file not found, skipping: \$file"
+                }
+            }
+
             # --- 이메일 제목 및 본문 생성 ---
             \$EmailSubject = "[Jenkins - \${BuildStatus}] \${ProjectName}(\${BranchName}) - \${Subject}"
-            
             \$EmailBody = @"
             <h2>Jenkins Build 알림: \${BuildStatus}</h2>
             <p>
@@ -91,15 +110,14 @@ def call(Map config) {
             
             # --- 이메일 발송 ---
             Send-MailMessage -From "\$SmtpUser" `
-                             -To "\$SmtpUser" `
+                             -To "\$SubmitterEmail" `
                              -Subject \$EmailSubject `
                              -Body \$EmailBody `
                              -BodyAsHtml `
+                             -Attachments \$ExistingAttachments `
                              -SmtpServer "gw.bhevs.co.kr" `
                              -Credential \$SmtpCreds `
                              -Encoding ([System.Text.Encoding]::UTF8)
-            
-            Write-Host "[Notification] Email notification sent to \${SmtpUser}."
         """
     }
 }
