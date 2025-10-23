@@ -73,8 +73,12 @@ pipeline {
 
                 echo 'Running [OneBin]RN_SW_Image_Maker.bat'
 
-                dir("${env.BUILD_OUTPUT_PATH}") {
-                    bat '"[OneBin]RN_SW_Image_Maker.bat"'
+                withCredentials([usernamePassword(credentialsId: 'sign-script-credentials', usernameVariable: 'USR', passwordVariable: 'PWD')]) {
+                    withEnv(["ID=${USR}", "PW=${PWD}"]) {
+                        dir("${env.BUILD_OUTPUT_PATH}") {
+                            bat '"[OneBin]RN_SW_Image_Maker.bat"'
+                        }
+                    }
                 }
             }
         }
