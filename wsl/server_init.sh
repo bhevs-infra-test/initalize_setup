@@ -16,6 +16,8 @@ sudo apt-get install -y \
   xclip \
   ansible \
   telnet \
+  python3 \
+  python3-venv \
   p7zip
 
 
