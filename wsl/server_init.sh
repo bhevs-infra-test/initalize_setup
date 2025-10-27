@@ -18,6 +18,8 @@ sudo apt-get install -y \
   telnet \
   python3 \
   python3-venv \
+  python3-pip \
+  cmake \
   p7zip
 
 
