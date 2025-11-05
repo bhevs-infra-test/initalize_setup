@@ -41,7 +41,7 @@ def call(Map config) {
             \$BuildOutputPathWin = \$BuildOutputPath.Replace('/', '\\') 
             \$AttachmentDir = Join-Path -Path \$Workspace -ChildPath \$BuildOutputPathWin
             
-            \$AttachmentNameString = "\${attachmentNameString}"
+            $AttachmentNameString = "${attachmentNameString}"
             \$ExistingAttachments = @()
 
             if (\$AttachmentNameString -ne "") {
