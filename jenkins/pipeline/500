@@ -1,0 +1,110 @@
+pipeline {
+    agent { label 'windows-server-agent' }
+
+    environment {
+        GIT_CREDENTIALS_ID = 'teamforge-choiseu'
+        BUILD_OUTPUT_PATH = 'renault_gen3_appl/Renault_Gen3/Appl/MakeBin'
+        GIT_BASE_URL = 'https://teamforge.bhevs.co.kr/gerrit'
+    }
+
+    stages {
+        stage('1. Source Checkout') {
+            steps {
+                timeout(time: 10, unit: 'MINUTES') {
+                    script {
+                        echo "Cloning 1. renault_gen3_appl..."
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: 'renault_gen3_SWEET500_release']],
+                            userRemoteConfigs: [[
+                                credentialsId: env.GIT_CREDENTIALS_ID,
+                                url: "${env.GIT_BASE_URL}/renault_gen3_release_appl_test"
+                            ]],
+                            extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'renault_gen3_appl']]
+                        ])
+                    }
+                }
+            }
+        }
+
+        stage('2. Build Execution') {
+            steps {
+                script {
+                    echo '--- Starting B.Bat Build ---'
+                    dir('renault_gen3_appl/Renault_Gen3/Appl') {
+                        bat script: 'b -j16', returnStatus: true
+                    }
+
+                    echo 'Running [OneBin_Step_1]RN_SW_Image_Maker.bat and Signing Process...'
+
+                    def hashValue
+                    def bearerToken
+                    def binFileToDelete = "Renault_Gen3_Appl_Pre_Signed.bin"
+
+                    dir('renault_gen3_appl/Renault_Gen3/Appl/MakeBin') {
+                        bat '[OneBin_Step_1]RN_SW_Image_Maker.bat'
+                        try {
+                            hashValue = bat(
+                                script: '@python bin_sha256_hasher.py',
+                                returnStdout: true
+                            ).trim()
+
+                            echo "Successfully captured hash from Python: ${hashValue}"
+                            bat "del ${binFileToDelete}"
+                        } catch (e) {
+                            error "Failed to execute Python hasher: ${e.message}"
+                        }
+                    }
+
+                    // 2. 서명 스크립트 실행 및 토큰 캡처
+                    echo '--- Starting Signing Process ---'
+                    dir("${env.BUILD_OUTPUT_PATH}") {
+                        def rawTokenOutput = powershell(
+                            script: "powershell -File \".\\run_signing.ps1\" -hashValue \"${hashValue}\" -Verbose",
+                            returnStdout: true
+                        )
+
+                        echo "Raw output from signing script: [${rawTokenOutput}]"
+
+                        def lines = rawTokenOutput.split('\n')
+                        if (lines.size() > 0) {
+                            bearerToken = lines[-1].trim().replace("\uFEFF", "")
+                        }
+                        if (!bearerToken || bearerToken.length() < 50) {
+                           error "Sanitized token seems invalid or empty. Value: [${bearerToken}]"
+                        }
+
+                        echo "Captured Token: ${bearerToken}"
+                    }
+
+                    // 3. [OneBin_Step_2] 실행
+                    echo '--- Starting [OneBin_Step_2]RN_SW_Image_Maker.bat Build ---'
+                    dir("${env.BUILD_OUTPUT_PATH}") {
+                        bat '[OneBin_Step_2]RN_SW_Image_Maker.bat'
+                    }
+
+                    // 4. 암호화 스크립트 실행
+                    echo '--- Starting Encryption Process ---'
+                    dir("${env.BUILD_OUTPUT_PATH}") {
+                        powershell(
+                            script: "powershell -File \".\\run_encryption.ps1\" -bearerToken \"${bearerToken}\""
+                        )
+                    }
+
+                    echo '--- Starting 5_Make_encrypted_Pdx.bat Build ---'
+                    dir('renault_gen3_appl/Renault_Gen3/Appl/MakeBin') {
+                        bat '5_Make_encrypted_Pdx.bat'
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                sendCiNotification(buildStatus: currentBuild.currentResult, payload: env)
+            }
+        }
+    }
+}
