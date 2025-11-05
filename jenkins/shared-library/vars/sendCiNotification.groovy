@@ -2,11 +2,13 @@
 
 /**
  * CI/CD 빌드 결과를 파싱하여 HTML 이메일로 전송합니다.
- * @param config Map: 'buildStatus' (빌드 상태), 'payload' (env 객체)
+ * @param config Map: 'buildStatus' (빌드 상태), 'payload' (env 객체), 'attachments' (파일명 리스트)
  */
 def call(Map config) {
     def payload = config.payload
     def buildStatus = config.buildStatus
+    def attachments = config.attachments ?: []
+    def attachmentNameString = attachments.join(',')
 
     if (!payload.change_obj_branch) {
         echo "[Notification] Webhook variables not found (change_obj_branch is null). Skipping notification."
@@ -39,18 +41,27 @@ def call(Map config) {
             \$BuildOutputPathWin = \$BuildOutputPath.Replace('/', '\\') 
             \$AttachmentDir = Join-Path -Path \$Workspace -ChildPath \$BuildOutputPathWin
             
-            \$File1 = Join-Path -Path \$AttachmentDir -ChildPath "Renault_Gen3.pdx"
-            \$File2 = Join-Path -Path \$AttachmentDir -ChildPath "Renault_Gen3_OneBin.hex"
-            \$FilesToAttach = @(\$File1, \$File2)
-            
+            \$AttachmentNameString = "\${attachmentNameString}"
             \$ExistingAttachments = @()
-            foreach (\$file in \$FilesToAttach) {
-                if (Test-Path \$file) {
-                    \$ExistingAttachments += \$file
-                    Write-Host "[Notification] Found attachment: \$file"
-                } else {
-                    Write-Host "[Notification] [Warning] Attachment file not found, skipping: \$file"
+
+            if (\$AttachmentNameString -ne "") {
+                \$AttachmentNames = \$AttachmentNameString.Split(',')
+                
+                Write-Host "[Notification] Checking for attachments in \$AttachmentDir..."
+
+                foreach (\$name in \$AttachmentNames) {
+                    \$fileName = \$name.Trim()
+                    \$filePath = Join-Path -Path \$AttachmentDir -ChildPath \$fileName
+                    
+                    if (Test-Path \$filePath) {
+                        \$ExistingAttachments += \$filePath
+                        Write-Host "[Notification] Found attachment: \$filePath"
+                    } else {
+                        Write-Host "[Notification] [Warning] Attachment file not found, skipping: \$filePath"
+                    }
                 }
+            } else {
+                Write-Host "[Notification] No attachments specified."
             }
 
             # --- 이메일 제목 및 본문 생성 ---
