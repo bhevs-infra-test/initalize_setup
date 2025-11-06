@@ -4,6 +4,7 @@
   vars_files:
     - docker/vars.yml
     - jenkins/vars.yml
+    - nexus/vars.yml
     - nginx/vars.yml
     - jenkins/setting/vars.yml
     # secret files
@@ -13,6 +14,7 @@
   tasks:
     - import_tasks: docker/tasks.yml
     - import_tasks: jenkins/tasks.yml
+    - import_tasks: nexus/tasks.yml
     - import_tasks: nginx/tasks.yml
     - import_tasks: jenkins/setting/tasks.yml
 

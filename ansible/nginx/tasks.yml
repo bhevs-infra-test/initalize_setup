@@ -69,6 +69,34 @@
     - jenkins
     - run
 
+- name: Nexus | Stop and remove the existing Nexus container
+  community.docker.docker_container:
+    name: "{{ nexus_container_name }}"
+    state: absent
+  tags:
+    - nginx
+    - nexus
+    - run
+
+- name: Nexus | Re-run Nexus container for internal access only
+  community.docker.docker_container:
+    name: "{{ nexus_container_name }}"
+    image: "sonatype/nexus3:latest"
+    state: started
+    restart_policy: unless-stopped
+    expose:
+      - "{{ nexus_internal_port }}"
+    volumes:
+      - "nexus_data:/nexus-data"
+    networks:
+      - name: "{{ jenkins_network_name }}"
+    env:
+      TZ: "Asia/Seoul"
+  tags:
+    - nginx
+    - nexus
+    - run
+
 - name: Nginx | Create configuration from template
   ansible.builtin.template:
     src: templates/nginx.conf.j2
@@ -97,6 +125,7 @@
       - "{{ jenkins_host_port_http }}:80"
       - "{{ jenkins_host_port_https }}:443"
       - "{{ jenkins_host_port_webhook | default('8081') }}:8081"
+      - "{{ nexus_host_port }}:{{ nexus_host_port }}"
     volumes:
       - "/tmp/nginx.conf:/etc/nginx/nginx.conf:ro"
       - "{{ certs_remote_dir }}:{{ certs_remote_dir }}:ro"

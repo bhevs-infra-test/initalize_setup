@@ -7,6 +7,11 @@ jenkins_container_name: "bhevs-jenkins"
 jenkins_network_name: "jenkins-net"
 jenkins_volume_name: "jenkins_data"
 
+# Nexus
+nexus_container_name: "bhevs-nexus"
+nexus_internal_port: "8081"
+nexus_host_port: 32511
+
 nginx_container_name: "bhevs-nginx-proxy"
 certs_remote_dir: "/etc/ssl/jenkins"
 jenkins_host_port_http: 80
