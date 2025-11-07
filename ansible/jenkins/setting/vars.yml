@@ -1,9 +1,16 @@
 # jenkins/setting/vars.yml
 ---
-# User Managed Data
+# ----------------------------------------
+# 1. 젠킨스 접속 정보
+# ----------------------------------------
 jenkins_url: "https://192.168.37.239"
-cli_dest_path: "/home/{{ ansible_user | default(lookup('env', 'USER')) }}/jenkins-cli.jar"
-
-# Jenkins Plugins to install
-jenkins_plugins:
-  - role-strategy
+jenkins_home: "/var/jenkins_home"
+# ----------------------------------------
+# 2. 플러그인 목록
+# ----------------------------------------
+jenkins_plugins_list:
+  #  - role-strategy
+  #  - generic-webhook-trigger
+  #  - ssh-slaves
+  - docker-commons
+  - configuration-as-code

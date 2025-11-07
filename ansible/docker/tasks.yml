@@ -17,7 +17,7 @@
 
 - name: System | Update apt cache and upgrade system packages
   ansible.builtin.apt:
-    update_cache: yes
+    update_cache: true
     upgrade: dist
   tags:
     - system
@@ -52,7 +52,7 @@
     repo: "deb [arch={{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }} signed-by={{ docker_gpg_key_path }}] {{ docker_repo_url_base }} {{ ansible_distribution_release }} stable"
     filename: "{{ docker_repo_filename }}"
     state: present
-    update_cache: yes
+    update_cache: true
   tags:
     - docker
     - repository
@@ -69,7 +69,7 @@
   ansible.builtin.user:
     name: "{{ ansible_user_id }}"
     groups: "{{ docker_group_name }}"
-    append: yes
+    append: true
   tags:
     - docker
     - configuration

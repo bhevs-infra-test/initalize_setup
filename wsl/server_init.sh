@@ -14,7 +14,7 @@ sudo apt-get install -y \
   tmux \
   wget \
   xclip \
-  ansible \
+  software-properties-common \
   telnet \
   python3 \
   python3-venv \
@@ -22,5 +22,9 @@ sudo apt-get install -y \
   cmake \
   p7zip
 
+sudo add-apt-repository --yes --update ppa:ansible/ansible
+sudo apt-get install -y ansible
+sudo ansible-galaxy collection install community.general
+sudo ansible-galaxy collection install community.docker
 
 echo "  -> Utilities installed."
