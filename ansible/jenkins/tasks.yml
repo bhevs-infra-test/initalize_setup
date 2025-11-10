@@ -37,7 +37,7 @@
     detach: true
     restart_policy: unless-stopped
     ports:
-      - "{{ jenkins_host_port_http }}:8080"
+      - "{{ jenkins_host_port }}:8080"
       - "{{ jenkins_host_port_agent }}:50000"
     volumes:
       - "{{ jenkins_volume_name }}:/var/jenkins_home"
@@ -49,6 +49,15 @@
     - jenkins
     - run
     - container
+
+- name: Jenkins | Check if initial admin password file already exists
+  ansible.builtin.stat:
+    path: "/var/lib/docker/volumes/{{ jenkins_volume_name }}/_data/secrets/initialAdminPassword"
+  register: password_file_status
+  tags:
+    - jenkins
+    - check
+    - password_status
 
 - name: Jenkins | Extract initial admin password
   block:
@@ -69,6 +78,7 @@
     - name: Display the Jenkins initial password
       ansible.builtin.debug:
         msg: "Jenkins initial password is: {{ jenkins_password.stdout }}"
+  when: password_file_status.stat.exists
   tags:
     - jenkins
     - debug

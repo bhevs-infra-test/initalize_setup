@@ -1,12 +1,13 @@
 ---
 # jenkins Setting 부분은 차후 진행
 - hosts: controller
+#- hosts: local
   vars_files:
     - docker/vars.yml
     - jenkins/vars.yml
     - nexus/vars.yml
     - nginx/vars.yml
-    - jenkins/setting/vars.yml
+#    - jenkins/setting/vars.yml
     # secret files
     - nginx/secrets.yml
     - jenkins/setting/secrets.yml
@@ -16,7 +17,7 @@
     - import_tasks: jenkins/tasks.yml
     - import_tasks: nexus/tasks.yml
     - import_tasks: nginx/tasks.yml
-    - import_tasks: jenkins/setting/tasks.yml
+#    - import_tasks: jenkins/setting/tasks.yml
 
   handlers:
     - name: Restart Jenkins

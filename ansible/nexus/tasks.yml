@@ -49,6 +49,15 @@
     - run
     - container
 
+- name: Nexus | Check if initial admin password file already exists
+  ansible.builtin.stat:
+    path: "/var/lib/docker/volumes/{{ nexus_volume_name }}/_data/admin.password"
+  register: password_file_status
+  tags:
+    - nexus
+    - check
+    - password_status
+
 - name: Nexus | Extract initial admin password
   block:
     - name: Wait for Nexus to be fully started
@@ -72,6 +81,7 @@
     - name: Display the Nexus initial password
       ansible.builtin.debug:
         msg: "Nexus initial password is: {{ nexus_password.stdout }}"
+  when: password_file_status.stat.exists
   tags:
     - nexus
     - debug
