@@ -119,7 +119,16 @@ pipeline {
     post {
         always {
             script {
-                sendCiNotification(buildStatus: currentBuild.currentResult, payload: env)
+                def filesToAttach = [
+                    'Renault_Gen3.pdx',
+                    'Renault_Gen3_OneBin.hex'
+                ]
+
+                sendCiNotification(
+                    buildStatus: currentBuild.currentResult,
+                    payload: env,
+                    attachments: filesToAttach
+                )
             }
         }
     }
