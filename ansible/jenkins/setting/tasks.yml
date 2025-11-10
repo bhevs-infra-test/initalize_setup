@@ -1,39 +1,27 @@
----
 # jenkins/setting/tasks.yml
-- name: Ensure Jenkins plugins are installed
-  community.general.jenkins_plugin:
-    name: "{{ jenkins_plugins_list }}"
-    state: present
-    url: "{{ jenkins_url }}"
-    url_username: "{{ jenkins_admin_user }}"
-    url_password: "{{ jenkins_admin_api_token }}"
+---
+- name: 1. 젠킨스 CLI 서버 URL 및 경로 정의
+  ansible.builtin.set_fact:
+    jenkins_host: "{{ jenkins_url | urlsplit('hostname') }}"
+    cli_jar_path: "/tmp/jenkins-cli.jar"
+
+- name: 2. (로컬) WSL에 jenkins-cli.jar 다운로드
+  ansible.builtin.get_url:
+    url: "http://{{ jenkins_host }}/jnlpJars/jenkins-cli.jar"
+    dest: "{{ cli_jar_path }}"
     validate_certs: false
-    with_dependencies: true
-    force: true
-    timeout: 120
+    mode: '0755'
+
+- name: 3. (로컬) 젠킨스 플러그인 목록 설치 (원격 서버로 명령)
+  ansible.builtin.shell: |
+    JENKINS_CLI_TRANSPORT=http \
+    java -jar {{ cli_jar_path }} \
+      -s http://{{ jenkins_host }}/ \
+      -auth {{ jenkins_admin_user }}:{{ jenkins_admin_api_token }} \
+      -noCertificateCheck \
+      install-plugin {{ item }}
+  loop: "{{ jenkins_plugins_list }}"
   register: plugin_install_result
-  notify: Restart Jenkins
-  tags:
-    - jenkins-plugins
-
-- name: Flush handlers to force Jenkins restart NOW
-  meta: flush_handlers
-  when: plugin_install_result.changed
-  tags:
-    - jenkins-plugins
-
-- name: Wait for Jenkins to be fully operational after restart
-  uri:
-    url: "{{ jenkins_url }}/login"
-    status_code: 200
-    user: "{{ jenkins_admin_user }}"
-    password: "{{ jenkins_admin_api_token }}"
-    force_basic_auth: true
-    validate_certs: false
-  register: jenkins_status
-  until: jenkins_status.status == 200
-  retries: 30
-  delay: 10
-  when: plugin_install_result.changed
-  tags:
-    - jenkins-plugins
+  changed_when: "'is already installed' not in plugin_install_result.stdout and 'Failed' not in plugin_install_result.stderr"
+  failed_when: "'Failed' in plugin_install_result.stderr"
+  notify: "Restart Jenkins"

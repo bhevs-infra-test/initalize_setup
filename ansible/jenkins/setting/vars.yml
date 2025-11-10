@@ -1,15 +1,8 @@
 # jenkins/setting/vars.yml
 ---
-# ----------------------------------------
-# 1. 젠킨스 접속 정보
-# ----------------------------------------
 jenkins_url: "https://192.168.37.239"
-# ----------------------------------------
-# 2. 플러그인 목록
-# ----------------------------------------
 jenkins_plugins_list:
-  #  - role-strategy
-  #  - generic-webhook-trigger
-  #  - ssh-slaves
-  - docker-commons
-  - configuration-as-code
+    - role-strategy
+    - generic-webhook-trigger
+    - ssh-slaves
+    - git-server

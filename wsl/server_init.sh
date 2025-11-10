@@ -20,6 +20,7 @@ sudo apt-get install -y \
   python3-venv \
   python3-pip \
   cmake \
+  openjdk-17-jre-headless \
   p7zip
 
 sudo add-apt-repository --yes --update ppa:ansible/ansible
