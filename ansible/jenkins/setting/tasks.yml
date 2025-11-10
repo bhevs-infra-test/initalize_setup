@@ -1,18 +1,24 @@
 # jenkins/setting/tasks.yml
 ---
-- name: 1. 젠킨스 CLI 서버 URL 및 경로 정의
+- name: 1. Define Jenkins CLI server URL and path
   ansible.builtin.set_fact:
     jenkins_host: "{{ jenkins_url | urlsplit('hostname') }}"
     cli_jar_path: "/tmp/jenkins-cli.jar"
+  tags:
+    - jenkins_cli
+    - always
 
-- name: 2. (로컬) WSL에 jenkins-cli.jar 다운로드
+- name: 2. Download jenkins-cli.jar to local (WSL)
   ansible.builtin.get_url:
     url: "http://{{ jenkins_host }}/jnlpJars/jenkins-cli.jar"
     dest: "{{ cli_jar_path }}"
     validate_certs: false
     mode: '0755'
+  tags:
+    - jenkins_cli
+    - always
 
-- name: 3. (로컬) 젠킨스 플러그인 목록 설치 (원격 서버로 명령)
+- name: 3. Install Jenkins plugins from list (run from local)
   ansible.builtin.shell: |
     JENKINS_CLI_TRANSPORT=http \
     java -jar {{ cli_jar_path }} \
@@ -25,3 +31,63 @@
   changed_when: "'is already installed' not in plugin_install_result.stdout and 'Failed' not in plugin_install_result.stderr"
   failed_when: "'Failed' in plugin_install_result.stderr"
   notify: "Restart Jenkins"
+  when: jenkins_plugins_list is defined and jenkins_plugins_list | length > 0
+  tags:
+    - jenkins_plugins
+
+- name: 4. Define list of credential definitions (ID and Type)
+  ansible.builtin.set_fact:
+    credential_definitions:
+      # secretText Types
+      - { id: "bhevs_renault_gen3_100", type: "secretText" }
+      - { id: "bhevs_renault_gen3_400", type: "secretText" }
+      - { id: "bhevs_renault_gen3_500", type: "secretText" }
+      - { id: "setest", type: "secretText" }
+      # userPw Types
+      - { id: "fescaro_kms", type: "userPw" }
+      - { id: "github-credentials", type: "userPw" }
+      - { id: "smtp-credentials", type: "userPw" }
+      - { id: "teamforge-choiseu", type: "userPw" }
+      - { id: "windows-server-agnet", type: "userPw" }
+      - { id: "userTest", type: "userPw" }
+  tags:
+    - jenkins_credentials
+
+- name: 5. Create temporary XML files from templates (injecting Vault secrets)
+  ansible.builtin.template:
+    src: "templates/credentials/{{ item.type }}/{{ item.id }}.xml.j2"
+    dest: "/tmp/{{ item.id }}.xml"
+    mode: '0600'
+  loop: "{{ credential_definitions }}"
+  tags:
+    - jenkins_credentials
+
+- name: 6. Register credentials on Jenkins via CLI (run from local)
+  ansible.builtin.shell: |
+    JENKINS_CLI_TRANSPORT=http \
+    java -jar {{ cli_jar_path }} \
+      -s http://{{ jenkins_host }}/ \
+      -auth {{ jenkins_admin_user }}:{{ jenkins_admin_api_token }} \
+      -noCertificateCheck \
+      create-credentials-by-xml "system::system::jenkins" _ \
+      < /tmp/{{ item.id }}.xml
+  loop: "{{ credential_definitions }}"
+  no_log: true
+  register: create_result
+  failed_when: >
+    create_result.rc != 0 and
+    'already exists' not in create_result.stderr and
+    'No change' not in create_result.stderr
+  changed_when: >
+    'already exists' not in create_result.stderr and
+    'No change' not in create_result.stderr
+  tags:
+    - jenkins_credentials
+
+- name: 7. Remove temporary XML files from local (WSL)
+  ansible.builtin.file:
+    path: "/tmp/{{ item.id }}.xml"
+    state: absent
+  loop: "{{ credential_definitions }}"
+  tags:
+    - jenkins_credentials
