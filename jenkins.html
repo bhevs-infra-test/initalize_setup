@@ -91,7 +91,7 @@
 <h3>2-2. TO-BE (개선 목표)</h3>
 <ul>
     <li><strong>빌드 자동화 및 표준화:</strong> 개발자가 코드를 <code>Push</code>하면, 젠킨스가 <mark>표준화된 환경에서 펌웨어를 자동으로 빌드</mark>하도록 조율합니다.</li>
-    <li><strong>산출물 중앙 관리:</strong> 모든 빌드 산출물(펌웨어 파일)은 젠킨스의 제어에 따라 NAS 혹은 **Nexus**와 같은 <mark>중앙 저장소에 자동으로 업로드되고 버전이 부여</mark>됩니다.</li>
+    <li><strong>산출물 중앙 관리:</strong> 모든 빌드 산출물(펌웨어 파일)은 젠킨스의 제어에 따라 NAS 혹은 Nexus와 같은 <mark>중앙 저장소에 자동으로 업로드되고 버전이 부여</mark>됩니다.</li>
     <li><strong>신뢰성 및 추적성 확보:</strong> 모든 펌웨어 파일은 어떤 소스 코드(Git Commit)로, <mark>언제, 어떻게 빌드되었는지 완전한 이력 추적</mark>이 가능해집니다.</li>
     <li><strong>신속한 테스트 피드백:</strong> 개발자는 젠킨스 알림을 통해 빌드 성공/실패 여부를 즉시 확인하고, NAS 혹은 중앙 저장소(Nexus)에서 <mark>검증된 파일을 다운로드하여 즉시 하드웨어(H/W) 테스트를 수행</mark>할 수 있습니다.</li>
 </ul>
@@ -180,14 +180,14 @@
 </ul>
 <h4>5-1-2. 제안 개선안(TO-BE)</h4>
 <ul>
-    <li><strong>전략 변경:</strong> 모델별 브랜치를 폐기하고, **모델별 레포지토리로 분리**합니다.</li>
+    <li><strong>전략 변경:</strong> 모델별 브랜치를 폐기하고, 모델별 레포지토리로 분리합니다.</li>
     <li><strong>표준 적용:</strong> 모든 레포에 <strong><code>prod</code>(공식), <code>develop</code>(통합), <code>feature</code>(기능)</strong> 브랜치 전략을 적용합니다.</li>
     <li><strong>핵심 브랜치 보호:</strong> <code>prod</code>, <code>develop</code> 브랜치는 <mark>직접 Push를 절대 금지</mark> (Protected Branch 설정)하고, 항상 배포 가능한 상태를 유지합니다.</li>
     <li><strong><code>feature</code> 브랜치 활용:</strong> 모든 개발은 <code>feature</code>에서 진행하며, Push 시 젠킨스가 자동 검증(비공식 빌드)합니다.</li>
 </ul>
 <h4>5-1-3. 개선안 도입 시 기대 효과</h4>
 <ul>
-    <li><strong>자원 효율화 (비용 절감):</strong> 레포 분리로 <mark>빌드에 필요한 코드만 clone</mark>합니다. 이는 **CPU, RAM, Disk 낭비를 제거**하고 <mark>빌드 준비 시간을 획기적으로 단축</mark>시킵니다.</li>
+    <li><strong>자원 효율화 (비용 절감):</strong> 레포 분리로 <mark>빌드에 필요한 코드만 clone</mark>합니다. 이는 CPU, RAM, Disk 낭비를 제거하고 <mark>빌드 준비 시간을 획기적으로 단축</mark>시킵니다.</li>
     <li><strong>CI/CD 연동 강화:</strong> 젠킨스가 <mark><code>feature</code>, <code>develop</code>, <code>prod</code> 브랜치 목적을 명확히 인지</mark>하고, 각기 다른 자동화(검증, 통합, 릴리스)를 실행합니다.</li>
     <li><strong>품질 및 안정성 확보:</strong> 핵심 브랜치 보호를 통해 <mark>검증되지 않은 코드의 통합/릴리스를 원천 차단</mark>합니다.</li>
     <li><strong>프로세스 정상화:</strong> Git을 본래 목적인 '버전 관리'로 사용하게 됩니다. <mark>브랜치 입력 실수 등 휴먼 에러가 감소</mark>하고, <code>prod</code> 브랜치에 '깨끗한 릴리스 이력'만 남게 됩니다.</li>
@@ -251,7 +251,7 @@
             (전산팀의 문의한 결과 해당 NAS 서버에 접근할 수 있는 계정을 추가로 발급반고 특정 디렉토리만 사용하도록 권한을 주어야하는 데 이 부분은 확인이 필요하다는 내용 전달받았습니다.)
         </li>
         <li><strong>장점:</strong> 이미 보유한 자원을 활용합니다.</li>
-        <li><strong>단점:</strong> 펌웨어 버전 관리(<code>v1.2.0</code>)나 오래된 파일 자동 삭제(Retention) 로직을 젠킨스 파이프라인 스크립트로 **직접 구현해야** 합니다.</li>
+        <li><strong>단점:</strong> 펌웨어 버전 관리(<code>v1.2.0</code>)나 오래된 파일 자동 삭제(Retention) 로직을 젠킨스 파이프라인 스크립트로 직접 구현해야 합니다.</li>
     </ul>
 </div>
 
