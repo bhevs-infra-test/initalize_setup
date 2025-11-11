@@ -101,37 +101,37 @@ pipeline {
             }
         }
 
-        stage('3. Deploy to Nexus') {
-            steps {
-                script {
-                    def VERSION = currentBuild.displayName.replace('#', '-')
-                    echo "VERSION: ${VERSION}"
-
-                    def deployFiles = [
-                        'Renault_Gen3.pdx'                   : "release/${VERSION}/Renault_Gen3.pdx",
-                        'Renault_Gen3_OneBin.hex'            : "release/${VERSION}/Renault_Gen3_OneBin.hex",
-                        'Renault_Gen3_Appl_Encrypted.bin'    : "release/${VERSION}/Renault_Gen3_Appl_Encrypted.bin"
-                    ]
-
-                    withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, passwordVariable: 'NE_PWD', usernameVariable: 'NEXUS_USER')]) {
-                        deployFiles.each { fileName, targetPath ->
-                            def sourceFile = "${env.BUILD_OUTPUT_PATH}/${fileName}"
-                            def nexusUrl = "http://${env.NEXUS_HOST_PORT}/repository/${env.NEXUS_REPO_ID}/${targetPath}"
-                            echo "Deploying ${fileName} to: ${nexusUrl}"
-                            powershell """
-                                \$securePassword = ConvertTo-SecureString -String "\$env:NEXUS_PWD" -AsPlainText -Force
-                                \$credential = New-Object System.Management.Automation.PSCredential ("\$env:NEXUS_USER", \$securePassword)
-                                Invoke-RestMethod -Uri "${nexusUrl}" `
-                                    -Method PUT `
-                                    -InFile "${sourceFile}" `
-                                    -Credential \$credential
-                            """
-                        }
-                    }
-                }
-            }
-        }
-    }
+//        stage('3. Deploy to Nexus') {
+//            steps {
+//                script {
+//                    def VERSION = currentBuild.displayName.replace('#', '-')
+//                    echo "VERSION: ${VERSION}"
+//
+//                    def deployFiles = [
+//                        'Renault_Gen3.pdx'                   : "release/${VERSION}/Renault_Gen3.pdx",
+//                        'Renault_Gen3_OneBin.hex'            : "release/${VERSION}/Renault_Gen3_OneBin.hex",
+//                        'Renault_Gen3_Appl_Encrypted.bin'    : "release/${VERSION}/Renault_Gen3_Appl_Encrypted.bin"
+//                    ]
+//
+//                    withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, passwordVariable: 'NE_PWD', usernameVariable: 'NEXUS_USER')]) {
+//                        deployFiles.each { fileName, targetPath ->
+//                            def sourceFile = "${env.BUILD_OUTPUT_PATH}/${fileName}"
+//                            def nexusUrl = "http://${env.NEXUS_HOST_PORT}/repository/${env.NEXUS_REPO_ID}/${targetPath}"
+//                            echo "Deploying ${fileName} to: ${nexusUrl}"
+//                            powershell """
+//                                \$securePassword = ConvertTo-SecureString -String "\$env:NEXUS_PWD" -AsPlainText -Force
+//                                \$credential = New-Object System.Management.Automation.PSCredential ("\$env:NEXUS_USER", \$securePassword)
+//                                Invoke-RestMethod -Uri "${nexusUrl}" `
+//                                    -Method PUT `
+//                                    -InFile "${sourceFile}" `
+//                                    -Credential \$credential
+//                            """
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     post {
         always {
