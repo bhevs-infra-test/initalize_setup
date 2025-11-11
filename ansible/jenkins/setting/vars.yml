@@ -12,6 +12,10 @@ pipeline_scm_repo_url: "https://github.com/bhevs-dev/jenkins.git"
 pipeline_scm_credentials_id: "github-credentials"
 pipeline_scm_branch: "*/main"
 
+
+
+
+
 # 플러그인 설치
 jenkins_plugins_list:
     - role-strategy
@@ -19,6 +23,10 @@ jenkins_plugins_list:
     - ssh-slaves
     - git-server
     - active-directory
+
+
+
+
 
 # 인증서
 credential_definitions:
@@ -68,26 +76,22 @@ credential_definitions:
     cred_username: "{{ email_id }}"
     cred_password: "{{ windows_server_pw }}"
 
+
+
+
+
 # 젠킨스 아이템 - 폴더
 jenkins_folder_template: "templates/items/folder.xml.j2"
 jenkins_folder_definitions:
   - { name: "RENAULT_GEN3", description: "RENAULT_GEN3 Project Folder" }
-  - { name: "Other_Project", description: "Another Project Folder 2" }
+
+
+
+
 
 # 젠킨스 아이템 - 작업(파이프라인)
 jenkins_job_template: "templates/items/pipeline.xml.j2"
 jenkins_job_definitions:
-  # 'Other_Project' 폴더 내부에 생성할 작업
-  - {
-    name: "new_test_job",
-    folder: "Other_Project",
-    description: "Other Project Test Pipeline 2",
-    log_rotator: { days_to_keep: 10, num_to_keep: 5 },
-    webhook_token_id: "bhevs_renault_gen3_100",
-    webhook_branch_regex: "^test-ansible",
-    path_in_repo: "pipeline/renault/test.groovy"
-  }
-
   # 'RENAULT_GEN3' 폴더 내부 작업들
   - {
     name: "test",
