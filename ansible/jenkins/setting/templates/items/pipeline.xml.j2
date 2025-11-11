@@ -65,9 +65,24 @@
       </triggers>
     </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
   </properties>
-  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@4218.vff679a_5c0f3a_">
-    <script>{{ job_groovy_script | replace("'", "&apos;") }}</script>
-    <sandbox>true</sandbox>
+
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@4218.vff679a_5c0f3a_">
+    <scm class="hudson.plugins.git.GitSCM" plugin="git@5.2.2">
+      <userRemoteConfigs>
+        <hudson.plugins.git.UserRemoteConfig>
+          <url>{{ job_scm_repo_url }}</url>
+          <credentialsId>{{ job_scm_credentials_id }}</credentialsId>
+        </hudson.plugins.git.UserRemoteConfig>
+      </userRemoteConfigs>
+      <branches>
+        <hudson.plugins.git.BranchSpec>
+          <name>{{ job_scm_branch }}</name>
+        </hudson.plugins.git.BranchSpec>
+      </branches>
+      <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    </scm>
+    <scriptPath>{{ job_script_path_in_repo }}</scriptPath>
+    <lightweight>true</lightweight>
   </definition>
   <triggers/>
   <disabled>false</disabled>

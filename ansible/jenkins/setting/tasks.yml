@@ -130,7 +130,10 @@
     job_log_rotator: "{{ item.log_rotator | default({}) }}"
     job_webhook_token_id: "{{ item.webhook_token_id }}"
     job_webhook_branch_regex: "{{ item.webhook_branch_regex }}"
-    job_groovy_script: "{{ lookup('file', item.script_file) }}"
+    job_scm_repo_url: "{{ pipeline_scm_repo_url }}"
+    job_scm_credentials_id: "{{ pipeline_scm_credentials_id }}"
+    job_scm_branch: "{{ pipeline_scm_branch }}"
+    job_script_path_in_repo: "{{ item.path_in_repo }}"
   loop: "{{ jenkins_job_definitions }}"
   tags:
     - jenkins_pipeline
