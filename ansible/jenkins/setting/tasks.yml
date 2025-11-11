@@ -40,10 +40,16 @@
 # --- Credentials ---
 - name: CREDENTIALS | Create temporary XML files from templates (injecting Vault secrets)
   ansible.builtin.template:
-    src: "templates/credentials/{{ item.type }}/{{ item.id }}.xml.j2"
+    src: "templates/credentials/{{ item.type }}.xml.j2"
     dest: "{{ jenkins_temp_dir }}/{{ item.id }}.xml"
     mode: '0600'
   loop: "{{ credential_definitions }}"
+  vars:
+    cred_id: "{{ item.id }}"
+    cred_description: "{{ item.cred_description | default('') }}"
+    cred_username: "{{ item.cred_username | default('') }}"
+    cred_password: "{{ item.cred_password | default('') }}"
+    cred_secret: "{{ item.cred_secret | default('') }}"
   tags:
     - jenkins_credentials
 
@@ -57,7 +63,7 @@
       create-credentials-by-xml "{{ jenkins_credential_store }}" {{ jenkins_credential_domain }} \
       < {{ jenkins_temp_dir }}/{{ item.id }}.xml
   loop: "{{ credential_definitions }}"
-  no_log: true
+#  no_log: true
   register: create_result
   failed_when: >
     create_result.rc != 0 and

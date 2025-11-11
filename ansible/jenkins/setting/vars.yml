@@ -23,16 +23,50 @@ jenkins_plugins_list:
 # 인증서
 credential_definitions:
   # secretText Types
-  - { id: "bhevs_renault_gen3_100", type: "secretText" }
-  - { id: "bhevs_renault_gen3_400", type: "secretText" }
-  - { id: "bhevs_renault_gen3_500", type: "secretText" }
+  - id: "bhevs_renault_gen3_100"
+    type: "secretText"
+    cred_description: "Renault 100 Webhook Token"
+    cred_secret: "{{ bhevs_renault_gen3_100 }}"
+  - id: "bhevs_renault_gen3_400"
+    type: "secretText"
+    cred_description: "Renault 400 Webhook Token"
+    cred_secret: "{{ bhevs_renault_gen3_400 }}"
+  - id: "bhevs_renault_gen3_500"
+    type: "secretText"
+    cred_description: "Renault 500 Webhook Token"
+    cred_secret: "{{ bhevs_renault_gen3_500 }}"
+
   # userPw Types
-  - { id: "fescaro_kms", type: "userPw" }
-  - { id: "github-credentials", type: "userPw" }
-  - { id: "smtp-credentials", type: "userPw" }
-  - { id: "teamforge-choiseu", type: "userPw" }
-  - { id: "windows-server-agnet", type: "userPw" }
-  - { id: "test", type: "userPw" }
+  - id: "fescaro_kms"
+    type: "userPw"
+    cred_description: "Fescaro KMS 계정"
+    cred_username: "{{ fescaro_id }}"
+    cred_password: "{{ fescaro_pw }}"
+  - id: "github-credentials"
+    type: "userPw"
+    cred_description: "GitHub 계정"
+    cred_username: "{{ github_id }}"
+    cred_password: "{{ github_pw }}"
+  - id: "smtp-credentials"
+    type: "userPw"
+    cred_description: "SMTP 메일 계정"
+    cred_username: "{{ email_id }}"
+    cred_password: "{{ email_pw }}"
+  - id: "teamforge-choiseu"
+    type: "userPw"
+    cred_description: "TeamForge 계정"
+    cred_username: "{{ teamforge_id }}"
+    cred_password: "{{ teamforge_pw }}"
+  - id: "windows-server-agnet"
+    type: "userPw"
+    cred_description: "Windows Server Agent 계정"
+    cred_username: "{{ windows_server_id }}"
+    cred_password: "{{ windows_server_pw }}"
+  - id: "test"
+    type: "userPw"
+    cred_description: "테스트용"
+    cred_username: "{{ email_id }}"
+    cred_password: "{{ windows_server_pw }}"
 
 # 젠킨스 아이템 - 폴더
 jenkins_folder_template: "templates/items/folder.xml.j2"
