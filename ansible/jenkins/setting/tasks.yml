@@ -42,14 +42,12 @@
       - { id: "bhevs_renault_gen3_100", type: "secretText" }
       - { id: "bhevs_renault_gen3_400", type: "secretText" }
       - { id: "bhevs_renault_gen3_500", type: "secretText" }
-      - { id: "setest", type: "secretText" }
       # userPw Types
       - { id: "fescaro_kms", type: "userPw" }
       - { id: "github-credentials", type: "userPw" }
       - { id: "smtp-credentials", type: "userPw" }
       - { id: "teamforge-choiseu", type: "userPw" }
       - { id: "windows-server-agnet", type: "userPw" }
-      - { id: "userTest", type: "userPw" }
   tags:
     - jenkins_credentials
 
