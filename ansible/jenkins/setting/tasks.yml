@@ -1,5 +1,6 @@
 # jenkins/setting/tasks.yml
 ---
+# --- Cli ---
 - name: CLI | Define Jenkins CLI server URL and path
   ansible.builtin.set_fact:
     jenkins_host: "{{ jenkins_url | urlsplit('hostname') }}"
@@ -18,6 +19,7 @@
     - jenkins_cli
     - always
 
+# --- Plugins ---
 - name: PLUGINS | Install Jenkins plugins from list (run from local)
   ansible.builtin.shell: |
     JENKINS_CLI_TRANSPORT=http \
@@ -35,6 +37,7 @@
   tags:
     - jenkins_plugins
 
+# --- Credentials ---
 - name: CREDENTIALS | Create temporary XML files from templates (injecting Vault secrets)
   ansible.builtin.template:
     src: "templates/credentials/{{ item.type }}/{{ item.id }}.xml.j2"
@@ -74,7 +77,8 @@
   tags:
     - jenkins_credentials
 
-- name: FOLDERS | Create temporary Folder XML files from templates
+# --- Items - Folder ---
+- name: FOLDER | Create temporary Folder XML files from templates
   ansible.builtin.template:
     src: "{{ jenkins_folder_template }}"
     dest: "{{ jenkins_temp_dir }}/folder_{{ item.name }}.xml"
@@ -85,7 +89,7 @@
   tags:
     - jenkins_folders
 
-- name: FOLDERS | Create Folders on Jenkins via CLI
+- name: FOLDER | Create Folders on Jenkins via CLI
   ansible.builtin.shell: |
     JENKINS_CLI_TRANSPORT=http \
     java -jar {{ cli_jar_path }} \
@@ -107,10 +111,56 @@
   tags:
     - jenkins_folders
 
-- name: FOLDERS | Remove temporary Folder XML files
+- name: FOLDER | Remove temporary Folder XML files
   ansible.builtin.file:
     path: "{{ jenkins_temp_dir }}/folder_{{ item.name }}.xml"
     state: absent
   loop: "{{ jenkins_folder_definitions }}"
   tags:
     - jenkins_folders
+
+# --- Items - Pipeline ---
+- name: PIPELINE | Create temporary Job XML files from templates
+  ansible.builtin.template:
+    src: "{{ jenkins_job_template }}"
+    dest: "{{ jenkins_temp_dir }}/job_{{ item.folder }}_{{ item.name }}.xml"
+    mode: '0600'
+  vars:
+    job_description: "{{ item.description }}"
+    job_log_rotator: "{{ item.log_rotator | default({}) }}"
+    job_webhook_token_id: "{{ item.webhook_token_id }}"
+    job_webhook_branch_regex: "{{ item.webhook_branch_regex }}"
+    job_groovy_script: "{{ lookup('file', item.script_file) }}"
+  loop: "{{ jenkins_job_definitions }}"
+  tags:
+    - jenkins_pipeline
+
+- name: PIPELINE | Create Jobs on Jenkins via CLI (inside Folders)
+  ansible.builtin.shell: |
+    JENKINS_CLI_TRANSPORT=http \
+    java -jar {{ cli_jar_path }} \
+      -s http://{{ jenkins_host }}/ \
+      -auth {{ jenkins_admin_user }}:{{ jenkins_admin_api_token }} \
+      -noCertificateCheck \
+      create-job "{{ item.folder }}/{{ item.name }}" \
+      < {{ jenkins_temp_dir }}/job_{{ item.folder }}_{{ item.name }}.xml
+  loop: "{{ jenkins_job_definitions }}"
+  no_log: true
+  register: job_create_result
+  failed_when: >
+    job_create_result.rc != 0 and
+    'already exists' not in job_create_result.stderr and
+    'No change' not in job_create_result.stderr
+  changed_when: >
+    'already exists' not in job_create_result.stderr and
+    'No change' not in job_create_result.stderr
+  tags:
+    - jenkins_pipeline
+
+- name: PIPELINE | Remove temporary Job XML files
+  ansible.builtin.file:
+    path: "{{ jenkins_temp_dir }}/job_{{ item.folder }}_{{ item.name }}.xml"
+    state: absent
+  loop: "{{ jenkins_job_definitions }}"
+  tags:
+    - jenkins_pipeline
