@@ -1,8 +1,35 @@
 # jenkins/setting/vars.yml
 ---
+# Jenkins 서버 정보
 jenkins_url: "https://192.168.37.239"
+jenkins_temp_dir: "/tmp"
+jenkins_cli_jar_file: "jenkins-cli.jar"
+jenkins_credential_store: "system::system::jenkins"
+jenkins_credential_domain: "_"
+
+# 플러그인 설치
 jenkins_plugins_list:
     - role-strategy
     - generic-webhook-trigger
     - ssh-slaves
     - git-server
+    - active-directory
+
+# 인증서
+credential_definitions:
+  # secretText Types
+  - { id: "bhevs_renault_gen3_100", type: "secretText" }
+  - { id: "bhevs_renault_gen3_400", type: "secretText" }
+  - { id: "bhevs_renault_gen3_500", type: "secretText" }
+  # userPw Types
+  - { id: "fescaro_kms", type: "userPw" }
+  - { id: "github-credentials", type: "userPw" }
+  - { id: "smtp-credentials", type: "userPw" }
+  - { id: "teamforge-choiseu", type: "userPw" }
+  - { id: "windows-server-agnet", type: "userPw" }
+
+# 젠킨스 폴더
+jenkins_folder_template: "templates/items/folder.xml.j2"
+jenkins_folder_definitions:
+  - { name: "RENAULT_GEN3", description: "RENAULT_GEN3 Project Folder" }
+  - { name: "Other_Project", description: "Another Project Folder" }

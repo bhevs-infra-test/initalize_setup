@@ -1,16 +1,16 @@
 # jenkins/setting/tasks.yml
 ---
-- name: 1. Define Jenkins CLI server URL and path
+- name: CLI | Define Jenkins CLI server URL and path
   ansible.builtin.set_fact:
     jenkins_host: "{{ jenkins_url | urlsplit('hostname') }}"
-    cli_jar_path: "/tmp/jenkins-cli.jar"
+    cli_jar_path: "{{ jenkins_temp_dir }}/{{ jenkins_cli_jar_file }}"
   tags:
     - jenkins_cli
     - always
 
-- name: 2. Download jenkins-cli.jar to local (WSL)
+- name: CLI | Download jenkins-cli.jar to local
   ansible.builtin.get_url:
-    url: "http://{{ jenkins_host }}/jnlpJars/jenkins-cli.jar"
+    url: "http://{{ jenkins_host }}/jnlpJars/{{ jenkins_cli_jar_file }}"
     dest: "{{ cli_jar_path }}"
     validate_certs: false
     mode: '0755'
@@ -18,7 +18,7 @@
     - jenkins_cli
     - always
 
-- name: 3. Install Jenkins plugins from list (run from local)
+- name: PLUGINS | Install Jenkins plugins from list (run from local)
   ansible.builtin.shell: |
     JENKINS_CLI_TRANSPORT=http \
     java -jar {{ cli_jar_path }} \
@@ -35,40 +35,24 @@
   tags:
     - jenkins_plugins
 
-- name: 4. Define list of credential definitions (ID and Type)
-  ansible.builtin.set_fact:
-    credential_definitions:
-      # secretText Types
-      - { id: "bhevs_renault_gen3_100", type: "secretText" }
-      - { id: "bhevs_renault_gen3_400", type: "secretText" }
-      - { id: "bhevs_renault_gen3_500", type: "secretText" }
-      # userPw Types
-      - { id: "fescaro_kms", type: "userPw" }
-      - { id: "github-credentials", type: "userPw" }
-      - { id: "smtp-credentials", type: "userPw" }
-      - { id: "teamforge-choiseu", type: "userPw" }
-      - { id: "windows-server-agnet", type: "userPw" }
-  tags:
-    - jenkins_credentials
-
-- name: 5. Create temporary XML files from templates (injecting Vault secrets)
+- name: CREDENTIALS | Create temporary XML files from templates (injecting Vault secrets)
   ansible.builtin.template:
     src: "templates/credentials/{{ item.type }}/{{ item.id }}.xml.j2"
-    dest: "/tmp/{{ item.id }}.xml"
+    dest: "{{ jenkins_temp_dir }}/{{ item.id }}.xml"
     mode: '0600'
   loop: "{{ credential_definitions }}"
   tags:
     - jenkins_credentials
 
-- name: 6. Register credentials on Jenkins via CLI (run from local)
+- name: CREDENTIALS | Register credentials on Jenkins via CLI (run from local)
   ansible.builtin.shell: |
     JENKINS_CLI_TRANSPORT=http \
     java -jar {{ cli_jar_path }} \
       -s http://{{ jenkins_host }}/ \
       -auth {{ jenkins_admin_user }}:{{ jenkins_admin_api_token }} \
       -noCertificateCheck \
-      create-credentials-by-xml "system::system::jenkins" _ \
-      < /tmp/{{ item.id }}.xml
+      create-credentials-by-xml "{{ jenkins_credential_store }}" {{ jenkins_credential_domain }} \
+      < {{ jenkins_temp_dir }}/{{ item.id }}.xml
   loop: "{{ credential_definitions }}"
   no_log: true
   register: create_result
@@ -82,10 +66,51 @@
   tags:
     - jenkins_credentials
 
-- name: 7. Remove temporary XML files from local (WSL)
+- name: CREDENTIALS | Remove temporary XML files from local (WSL)
   ansible.builtin.file:
-    path: "/tmp/{{ item.id }}.xml"
+    path: "{{ jenkins_temp_dir }}/{{ item.id }}.xml"
     state: absent
   loop: "{{ credential_definitions }}"
   tags:
     - jenkins_credentials
+
+- name: FOLDERS | Create temporary Folder XML files from templates
+  ansible.builtin.template:
+    src: "{{ jenkins_folder_template }}"
+    dest: "{{ jenkins_temp_dir }}/folder_{{ item.name }}.xml"
+    mode: '0600'
+  vars:
+    folder_description: "{{ item.description }}"
+  loop: "{{ jenkins_folder_definitions }}"
+  tags:
+    - jenkins_folders
+
+- name: FOLDERS | Create Folders on Jenkins via CLI
+  ansible.builtin.shell: |
+    JENKINS_CLI_TRANSPORT=http \
+    java -jar {{ cli_jar_path }} \
+      -s http://{{ jenkins_host }}/ \
+      -auth {{ jenkins_admin_user }}:{{ jenkins_admin_api_token }} \
+      -noCertificateCheck \
+      create-job "{{ item.name }}" \
+      < {{ jenkins_temp_dir }}/folder_{{ item.name }}.xml
+  loop: "{{ jenkins_folder_definitions }}"
+  no_log: true
+  register: folder_create_result
+  failed_when: >
+    folder_create_result.rc != 0 and
+    'already exists' not in folder_create_result.stderr and
+    'No change' not in folder_create_result.stderr
+  changed_when: >
+    'already exists' not in folder_create_result.stderr and
+    'No change' not in folder_create_result.stderr
+  tags:
+    - jenkins_folders
+
+- name: FOLDERS | Remove temporary Folder XML files
+  ansible.builtin.file:
+    path: "{{ jenkins_temp_dir }}/folder_{{ item.name }}.xml"
+    state: absent
+  loop: "{{ jenkins_folder_definitions }}"
+  tags:
+    - jenkins_folders
