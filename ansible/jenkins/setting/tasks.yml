@@ -53,6 +53,19 @@
   tags:
     - jenkins_credentials
 
+- name: CREDENTIALS | Delete existing credentials (if any)
+  ansible.builtin.shell: |
+    JENKINS_CLI_TRANSPORT=http \
+    java -jar {{ cli_jar_path }} \
+      -s http://{{ jenkins_host }}/ \
+      -auth {{ jenkins_admin_user }}:{{ jenkins_admin_api_token }} \
+      -noCertificateCheck \
+      delete-credentials "{{ jenkins_credential_store }}" {{ jenkins_credential_domain }} "{{ item.id }}"
+  loop: "{{ credential_definitions }}"
+  ignore_errors: true
+  tags:
+    - jenkins_credentials
+
 - name: CREDENTIALS | Register credentials on Jenkins via CLI (run from local)
   ansible.builtin.shell: |
     JENKINS_CLI_TRANSPORT=http \
@@ -63,7 +76,7 @@
       create-credentials-by-xml "{{ jenkins_credential_store }}" {{ jenkins_credential_domain }} \
       < {{ jenkins_temp_dir }}/{{ item.id }}.xml
   loop: "{{ credential_definitions }}"
-#  no_log: true
+  no_log: true
   register: create_result
   failed_when: >
     create_result.rc != 0 and
