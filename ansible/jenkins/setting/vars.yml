@@ -110,14 +110,8 @@ jenkins_job_definitions:
         description: "빌드할 브랜치를 선택하세요."
       - name: "renault_gen3_release_appl_test"
         description: "빌드할 브랜치를 선택하세요."
+
   # 'RENAULT_GEN3' 폴더 내부 작업들
-  - name: "test"
-    folder: "RENAULT_GEN3"
-    description: "Renault test Pipeline 2"
-    log_rotator: { days_to_keep: 30, num_to_keep: 10 }
-    webhook_token_id: "bhevs_renault_gen3_500"
-    webhook_branch_regex: "^test-ansible$"
-    path_in_repo: "pipeline/renault/test.groovy"
   - name: "100"
     folder: "RENAULT_GEN3"
     description: "Renault 100 Pipeline"
