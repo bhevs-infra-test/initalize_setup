@@ -88,8 +88,13 @@
                             <key>newRev_obj</key>
                             <value>$.newRev</value>
                         </org.jenkinsci.plugins.gwt.GenericVariable>
+                        <org.jenkinsci.plugins.gwt.GenericVariable>
+                            <expressionType>JSONPath</expressionType>
+                            <key>refName</key>
+                            <value>$.refName</value>
+                        </org.jenkinsci.plugins.gwt.GenericVariable>
                     </genericVariables>
-                    <regexpFilterText>$change_obj_branch</regexpFilterText>
+                    <regexpFilterText>$refName</regexpFilterText>
                     <regexpFilterExpression>{{ job_webhook_branch_regex }}</regexpFilterExpression>
                     <printPostContent>true</printPostContent>
                     <printContributedVariables>true</printContributedVariables>
