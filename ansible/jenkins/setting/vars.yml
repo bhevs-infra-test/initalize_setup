@@ -74,11 +74,11 @@ credential_definitions:
     cred_description: "Windows Server Agent 계정"
     cred_username: "{{ windows_server_id }}"
     cred_password: "{{ windows_server_pw }}"
-  - id: "test"
+  - id: "nas-credentials"
     type: "userPw"
-    cred_description: "테스트용"
-    cred_username: "{{ email_id }}"
-    cred_password: "{{ windows_server_pw }}"
+    cred_description: "NAS 접근 계정"
+    cred_username: "{{ nas_id }}"
+    cred_password: "{{ nas_pw }}"
 
 
 
