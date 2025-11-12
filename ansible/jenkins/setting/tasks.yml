@@ -153,6 +153,9 @@
     job_scm_credentials_id: "{{ pipeline_scm_credentials_id }}"
     job_scm_branch: "{{ pipeline_scm_branch }}"
     job_script_path_in_repo: "{{ item.path_in_repo }}"
+    branch_parameters: "{{ item.branch_parameters | default([]) }}"
+    template_teamforge_base_url: "{{ teamforge_base_url }}"
+    template_teamforge_credentials_id: "{{ teamforge_credentials_id }}"
   loop: "{{ jenkins_job_definitions }}"
   tags:
     - jenkins_pipeline

@@ -1,0 +1,66 @@
+import com.cloudbees.plugins.credentials.CredentialsProvider
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials
+import jenkins.model.Jenkins
+import java.net.URLEncoder
+
+def getBranches(String repoUrl, String credentialsId) {
+    def branchList = []
+
+    def creds = CredentialsProvider.lookupCredentials(
+            StandardUsernamePasswordCredentials.class,
+            Jenkins.get(),
+            null,
+            null
+    ).find { it.id == credentialsId }
+
+    if (creds == null) {
+        branchList.add("ERROR: Credential '${credentialsId}' not found or not Username/Password type.")
+        return branchList
+    }
+
+    def encodedUsername = URLEncoder.encode(creds.username, "UTF-8")
+    def encodedPassword = URLEncoder.encode(creds.password.getPlainText(), "UTF-8")
+    def authUrl = repoUrl.replace("https://", "https://${encodedUsername}:${encodedPassword}@")
+    def command = "git -c http.sslVerify=false ls-remote --heads ${authUrl}"
+
+    def proc = command.execute()
+
+    proc.waitFor()
+    if (proc.exitValue() != 0) {
+        branchList.add("ERROR: Could not fetch branches. (Exit: ${proc.exitValue()})")
+        branchList.add("--- 에러 내용 ---")
+        branchList.add(proc.err.text)
+        return branchList
+    }
+
+    def foundBranches = 0
+    proc.in.text.readLines().each { line -&gt;
+        def parts = line.split("\\s+")
+        if (parts.length &gt; 1 &amp;&amp; parts[1].startsWith("refs/heads/")) { {# XML 이스케이프 유지: > 및 & #}
+            branchList.add(parts[1].replace("refs/heads/", ""))
+            foundBranches++
+        }
+    }
+
+    if (foundBranches == 0) {
+        branchList.add("--- git ls-remote 성공했으나, 브랜치를 찾지 못함 ---")
+    }
+
+    branchList.sort()
+
+    if (branchList.contains("master")) {
+        branchList.remove("master")
+        branchList.add(0, "master")
+    }
+
+    return branchList
+}
+
+try {
+    return getBranches(
+            "{{ groovy_repo_url }}",
+            "{{ groovy_credentials_id }}"
+    )
+} catch (e) {
+    return ["FATAL ERROR: 스크립트 실행 중 예외 발생.", e.message]
+}

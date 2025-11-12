@@ -7,22 +7,26 @@ jenkins_cli_jar_file: "jenkins-cli.jar"
 jenkins_credential_store: "system::system::jenkins"
 jenkins_credential_domain: "_"
 
-# pipeline repo
+# pipeline 정보
 pipeline_scm_repo_url: "https://github.com/bhevs-dev/jenkins.git"
 pipeline_scm_credentials_id: "github-credentials"
 pipeline_scm_branch: "*/main"
 
+# TeamForge 정보
+teamforge_base_url: "https://teamforge.bhevs.co.kr/gerrit"
+teamforge_credentials_id: "teamforge-choiseu"
 
 
 
 
 # 플러그인 설치
 jenkins_plugins_list:
-    - role-strategy
-    - generic-webhook-trigger
-    - ssh-slaves
-    - git-server
-    - active-directory
+  - role-strategy
+  - generic-webhook-trigger
+  - ssh-slaves
+  - git-server
+  - active-directory
+  - uno-choice
 
 
 
@@ -84,6 +88,7 @@ credential_definitions:
 jenkins_folder_template: "templates/items/folder.xml.j2"
 jenkins_folder_definitions:
   - { name: "RENAULT_GEN3", description: "RENAULT_GEN3 Project Folder" }
+  - { name: "test", description: "test Project Folder" }
 
 
 
@@ -92,40 +97,45 @@ jenkins_folder_definitions:
 # 젠킨스 아이템 - 작업(파이프라인)
 jenkins_job_template: "templates/items/pipeline.xml.j2"
 jenkins_job_definitions:
-  # 'RENAULT_GEN3' 폴더 내부 작업들
-  - {
-    name: "test",
-    folder: "RENAULT_GEN3",
-    description: "Renault test Pipeline 2",
-    log_rotator: { days_to_keep: 30, num_to_keep: 10 },
-    webhook_token_id: "bhevs_renault_gen3_500",
-    webhook_branch_regex: "^test-ansible$",
+  # 'test' 폴더 내부 작업들
+  - name: "test"
+    folder: "test"
+    description: "test Pipeline 2"
+    log_rotator: { days_to_keep: 10, num_to_keep: 10 }
+    webhook_token_id: "bhevs_renault_gen3_500"
+    webhook_branch_regex: "^test-ansible$"
     path_in_repo: "pipeline/renault/test.groovy"
-  }
-  - {
-    name: "100",
-    folder: "RENAULT_GEN3",
-    description: "Renault 100 Pipeline",
-    log_rotator: { days_to_keep: 60, num_to_keep: 60 },
-    webhook_token_id: "bhevs_renault_gen3_100",
-    webhook_branch_regex: "^renault_gen3_SWEET100_release$",
+    branch_parameters:
+      - name: "renault_gen3_release_appl_test"
+        description: "빌드할 브랜치를 선택하세요."
+      - name: "renault_gen3_release_appl_test"
+        description: "빌드할 브랜치를 선택하세요."
+  # 'RENAULT_GEN3' 폴더 내부 작업들
+  - name: "test"
+    folder: "RENAULT_GEN3"
+    description: "Renault test Pipeline 2"
+    log_rotator: { days_to_keep: 30, num_to_keep: 10 }
+    webhook_token_id: "bhevs_renault_gen3_500"
+    webhook_branch_regex: "^test-ansible$"
+    path_in_repo: "pipeline/renault/test.groovy"
+  - name: "100"
+    folder: "RENAULT_GEN3"
+    description: "Renault 100 Pipeline"
+    log_rotator: { days_to_keep: 60, num_to_keep: 60 }
+    webhook_token_id: "bhevs_renault_gen3_100"
+    webhook_branch_regex: "^renault_gen3_SWEET100_release$"
     path_in_repo: "pipeline/renault/100.groovy"
-  }
-  - {
-    name: "400",
-    folder: "RENAULT_GEN3",
-    description: "Renault 400 Pipeline",
-    log_rotator: { days_to_keep: 60, num_to_keep: 60 },
-    webhook_token_id: "bhevs_renault_gen3_400",
-    webhook_branch_regex: "^renault_gen3_SWEET400_release$",
+  - name: "400"
+    folder: "RENAULT_GEN3"
+    description: "Renault 400 Pipeline"
+    log_rotator: { days_to_keep: 60, num_to_keep: 60 }
+    webhook_token_id: "bhevs_renault_gen3_400"
+    webhook_branch_regex: "^renault_gen3_SWEET400_release$"
     path_in_repo: "pipeline/renault/400.groovy"
-  }
-  - {
-    name: "500",
-    folder: "RENAULT_GEN3",
-    description: "Renault 500 Pipeline",
-    log_rotator: { days_to_keep: 60, num_to_keep: 60 },
-    webhook_token_id: "bhevs_renault_gen3_500",
-    webhook_branch_regex: "^renault_gen3_SWEET500_release$",
+  - name: "500"
+    folder: "RENAULT_GEN3"
+    description: "Renault 500 Pipeline"
+    log_rotator: { days_to_keep: 60, num_to_keep: 60 }
+    webhook_token_id: "bhevs_renault_gen3_500"
+    webhook_branch_regex: "^renault_gen3_SWEET500_release$"
     path_in_repo: "pipeline/renault/500.groovy"
-  }
