@@ -98,13 +98,13 @@ jenkins_folder_definitions:
 jenkins_job_template: "templates/items/pipeline.xml.j2"
 jenkins_job_definitions:
   # 'test' 폴더 내부 작업들
-  - name: "test"
+  - name: "100-test"
     folder: "test"
     description: "test Pipeline 2"
     log_rotator: { days_to_keep: 10, num_to_keep: 10 }
     webhook_token_id: "bhevs_renault_gen3_100"
     webhook_branch_regex: "^(refs/heads/test|refs/tags/test.*)$"
-    path_in_repo: "pipeline/renault/test.groovy"
+    path_in_repo: ""
     branch_parameters:
       - name: "renault_gen3_fbl"
         description: "빌드할 브랜치를 선택하세요."
@@ -123,19 +123,44 @@ jenkins_job_definitions:
     description: "Renault 100 Pipeline"
     log_rotator: { days_to_keep: 60, num_to_keep: 60 }
     webhook_token_id: "bhevs_renault_gen3_100"
-    webhook_branch_regex: "^renault_gen3_SWEET100_release$"
+    webhook_branch_regex: "^(refs/heads/renault_gen3_SWEET100_release|refs/tags/100v.*)$"
     path_in_repo: "pipeline/renault/100.groovy"
+    branch_parameters:
+      - name: "renault_gen3_fbl"
+        description: "renault_gen3_fbl Repository에서 빌드할 브랜치를 선택하세요."
+      - name: "renault_gen3_odc_appl"
+        description: "renault_gen3_odc_appl Repository에서 빌드할 브랜치를 선택하세요."
+      - name: "renault_gen3_platform_common"
+        description: "renault_gen3_platform_common Repository에서 빌드할 브랜치를 선택하세요."
+      - name: "renault_gen3_platform_wlc"
+        description: "renault_gen3_platform_wlc Repository에서 빌드할 브랜치를 선택하세요."
+      - name: "renault_gen3_platform_wlc_inc"
+        description: "renault_gen3_platform_wlc_inc Repository에서 빌드할 브랜치를 선택하세요."
+
   - name: "400"
     folder: "RENAULT_GEN3"
     description: "Renault 400 Pipeline"
     log_rotator: { days_to_keep: 60, num_to_keep: 60 }
     webhook_token_id: "bhevs_renault_gen3_400"
-    webhook_branch_regex: "^renault_gen3_SWEET400_release$"
+    webhook_branch_regex: "^(refs/heads/renault_gen3_SWEET400_release|refs/tags/400v.*)$"
     path_in_repo: "pipeline/renault/400.groovy"
+    branch_parameters:
+      - name: "renault_gen3_odc_appl"
+        description: "renault_gen3_odc_appl Repository에서 빌드할 브랜치를 선택하세요."
+      - name: "renault_gen3_platform_common"
+        description: "renault_gen3_platform_common Repository에서 빌드할 브랜치를 선택하세요."
+      - name: "renault_gen3_platform_wlc"
+        description: "renault_gen3_platform_wlc Repository에서 빌드할 브랜치를 선택하세요."
+      - name: "renault_gen3_platform_wlc_inc"
+        description: "renault_gen3_platform_wlc_inc Repository에서 빌드할 브랜치를 선택하세요."
+
   - name: "500"
     folder: "RENAULT_GEN3"
     description: "Renault 500 Pipeline"
     log_rotator: { days_to_keep: 60, num_to_keep: 60 }
     webhook_token_id: "bhevs_renault_gen3_500"
-    webhook_branch_regex: "^renault_gen3_SWEET500_release$"
+    webhook_branch_regex: "^(refs/heads/renault_gen3_SWEET500_release|refs/tags/500v.*)$"
     path_in_repo: "pipeline/renault/500.groovy"
+    branch_parameters:
+      - name: "renault_gen3_appl"
+        description: "renault_gen3_appl Repository에서 빌드할 브랜치를 선택하세요."

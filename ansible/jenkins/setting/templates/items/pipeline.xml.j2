@@ -109,6 +109,7 @@
             </triggers>
         </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
     </properties>
+    {% if job_script_path_in_repo %}
     <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@4218.vff679a_5c0f3a_">
         <scm class="hudson.plugins.git.GitSCM" plugin="git@5.2.2">
             <userRemoteConfigs>
@@ -127,6 +128,7 @@
         <scriptPath>{{ job_script_path_in_repo }}</scriptPath>
         <lightweight>true</lightweight>
     </definition>
+    {% endif %}
     <triggers/>
     <disabled>false</disabled>
 </flow-definition>
