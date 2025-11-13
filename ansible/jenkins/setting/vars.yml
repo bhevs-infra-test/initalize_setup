@@ -103,7 +103,7 @@ jenkins_job_definitions:
     description: "test Pipeline 2"
     log_rotator: { days_to_keep: 10, num_to_keep: 10 }
     webhook_token_id: "bhevs_renault_gen3_100"
-    webhook_branch_regex: "^(refs/heads/test|refs/tags/test.*)$"
+    webhook_branch_regex: "^refs/tags/auto.*$"
     path_in_repo: ""
     branch_parameters:
       - name: "renault_gen3_fbl"
@@ -123,7 +123,7 @@ jenkins_job_definitions:
     description: "Renault 100 Pipeline"
     log_rotator: { days_to_keep: 60, num_to_keep: 60 }
     webhook_token_id: "bhevs_renault_gen3_100"
-    webhook_branch_regex: "^(refs/heads/renault_gen3_SWEET100_release|refs/tags/100v.*)$"
+    webhook_branch_regex: "^refs/tags/auto.*$"
     path_in_repo: "pipeline/renault/100.groovy"
     branch_parameters:
       - name: "renault_gen3_fbl"
@@ -142,7 +142,7 @@ jenkins_job_definitions:
     description: "Renault 400 Pipeline"
     log_rotator: { days_to_keep: 60, num_to_keep: 60 }
     webhook_token_id: "bhevs_renault_gen3_400"
-    webhook_branch_regex: "^(refs/heads/renault_gen3_SWEET400_release|refs/tags/400v.*)$"
+    webhook_branch_regex: "^refs/tags/auto.*$"
     path_in_repo: "pipeline/renault/400.groovy"
     branch_parameters:
       - name: "renault_gen3_odc_appl"
@@ -159,7 +159,7 @@ jenkins_job_definitions:
     description: "Renault 500 Pipeline"
     log_rotator: { days_to_keep: 60, num_to_keep: 60 }
     webhook_token_id: "bhevs_renault_gen3_500"
-    webhook_branch_regex: "^(refs/heads/renault_gen3_SWEET500_release|refs/tags/500v.*)$"
+    webhook_branch_regex: "^refs/tags/auto.*$"
     path_in_repo: "pipeline/renault/500.groovy"
     branch_parameters:
       - name: "renault_gen3_appl"
