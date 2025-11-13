@@ -20,7 +20,7 @@
         <hudson.model.ParametersDefinitionProperty>
             <parameterDefinitions>
                 {% for param in branch_parameters %}
-                    <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.8.8">
+                    <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.8.8">
                         <name>{{ param.name }}</name>
                         <description>{{ param.description }}</description>
                         <randomName>choice-parameter-{{ param.name | hash }}-{{ param.name | hash }}</randomName>
@@ -28,11 +28,10 @@
                         <script class="org.biouno.unochoice.model.GroovyScript">
                             <secureScript plugin="script-security@1385.v7d2d9ec4d909">
                                 <script>
-                                {# [수정 2] tasks.yml에서 전달받은 'template_' 접두사 변수명 사용 #}
                                 {% set groovy_repo_url = template_teamforge_base_url + '/' + param.name %}
                                 {% set groovy_credentials_id = param.credentials_id | default(template_teamforge_credentials_id) %}
 
-                                {% include 'scripts/get_branches.groovy.xml.j2' %}
+                                {% include 'scripts/get_ref.groovy.xml.j2' %}
                                 </script>
                                 <sandbox>true</sandbox>
                             </secureScript>
@@ -46,9 +45,9 @@
                         <parameters class="linked-hash-map"/>
                         <referencedParameters/>
                         <choiceType>PT_SINGLE_SELECT</choiceType>
-                        <filterable>false</filterable>
+                        <filterable>true</filterable>
                         <filterLength>1</filterLength>
-                    </org.biouno.unochoice.CascadeChoiceParameter>
+                    </org.biouno.unochoice.ChoiceParameter>
                 {% endfor %}
             </parameterDefinitions>
         </hudson.model.ParametersDefinitionProperty>

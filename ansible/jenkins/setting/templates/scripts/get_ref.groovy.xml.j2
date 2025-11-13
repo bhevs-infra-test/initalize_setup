@@ -1,0 +1,83 @@
+import com.cloudbees.plugins.credentials.CredentialsProvider
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials
+import jenkins.model.Jenkins
+import java.net.URLEncoder
+
+def getRefs(String repoUrl, String credentialsId) {
+    def refList = []
+    def branches = []
+    def tags = []
+
+    def creds = CredentialsProvider.lookupCredentials(
+            StandardUsernamePasswordCredentials.class,
+            Jenkins.get(),
+            null,
+            null
+    ).find { it.id == credentialsId }
+
+    if (creds == null) {
+        refList.add("ERROR: Credential '${credentialsId}' not found or not Username/Password type.")
+        return refList
+    }
+
+    def encodedUsername = URLEncoder.encode(creds.username, "UTF-8")
+    def encodedPassword = URLEncoder.encode(creds.password.getPlainText(), "UTF-8")
+    def authUrl = repoUrl.replace("https://", "https://${encodedUsername}:${encodedPassword}@")
+    def command = "git -c http.sslVerify=false ls-remote --heads --tags ${authUrl}"
+
+    def proc = command.execute()
+
+    proc.waitFor()
+    if (proc.exitValue() != 0) {
+        refList.add("ERROR: Could not fetch refs. (Exit: ${proc.exitValue()})")
+        refList.add("--- 에러 내용 ---")
+        refList.add(proc.err.text)
+        return refList
+    }
+
+    def foundRefs = 0
+    proc.in.text.readLines().each { line ->
+        def parts = line.split("\\s+")
+        if (parts.length > 1) {
+            def ref = parts[1]
+            if (ref.startsWith("refs/heads/")) {
+                branches.add(ref.replace("refs/heads/", ""))
+                foundRefs++
+            } else if (ref.startsWith("refs/tags/")) {
+                def tagName = ref.replace("refs/tags/", "")
+                if (!tagName.endsWith("^{}")) {
+                    tags.add(tagName)
+                    foundRefs++
+                }
+            }
+        }
+    }
+
+    if (foundRefs == 0) {
+        refList.add("--- git ls-remote 성공했으나, 브랜치나 태그를 찾지 못함 ---")
+        return refList
+    }
+
+    branches.sort()
+    if (branches.contains("master")) {
+        branches.remove("master")
+        branches.add(0, "master")
+    }
+
+    tags.sort().reverse()
+    def prefixedTags = tags.collect { "(TAG) ${it}" }
+
+    refList.addAll(branches)
+    refList.addAll(prefixedTags)
+
+    return refList
+}
+
+try {
+    return getRefs(
+            "{{ groovy_repo_url }}",
+            "{{ groovy_credentials_id }}"
+    )
+} catch (e) {
+    return ["FATAL ERROR: 스크립트 실행 중 예외 발생.", e.message]
+}
