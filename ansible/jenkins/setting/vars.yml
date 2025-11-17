@@ -100,22 +100,50 @@ jenkins_job_definitions:
   # 'test' 폴더 내부 작업들
   - name: "100-test"
     folder: "test"
-    description: "test Pipeline 2"
+    description: "test Pipeline"
     log_rotator: { days_to_keep: 10, num_to_keep: 10 }
     webhook_token_id: "bhevs_renault_gen3_100"
-    webhook_branch_regex: "^refs/tags/auto.*$"
+    webhook_branch_regex: "^refs/head/test.*$"
     path_in_repo: ""
     branch_parameters:
       - name: "renault_gen3_fbl"
-        description: "빌드할 브랜치를 선택하세요."
+        description: "renault_gen3_fbl Repository에서 빌드할 브랜치를 선택하세요."
       - name: "renault_gen3_odc_appl"
-        description: "빌드할 브랜치를 선택하세요."
+        description: "renault_gen3_odc_appl Repository에서 빌드할 브랜치를 선택하세요."
       - name: "renault_gen3_platform_common"
-        description: "빌드할 브랜치를 선택하세요."
+        description: "renault_gen3_platform_common Repository에서 빌드할 브랜치를 선택하세요."
       - name: "renault_gen3_platform_wlc"
-        description: "빌드할 브랜치를 선택하세요."
+        description: "renault_gen3_platform_wlc Repository에서 빌드할 브랜치를 선택하세요."
       - name: "renault_gen3_platform_wlc_inc"
-        description: "빌드할 브랜치를 선택하세요."
+        description: "renault_gen3_platform_wlc_inc Repository에서 빌드할 브랜치를 선택하세요."
+
+  - name: "400-test"
+    folder: "test"
+    description: "test Pipeline"
+    log_rotator: { days_to_keep: 10, num_to_keep: 10 }
+    webhook_token_id: "bhevs_renault_gen3_400"
+    webhook_branch_regex: "^refs/head/test.*$"
+    path_in_repo: ""
+    branch_parameters:
+      - name: "renault_gen3_odc_appl"
+        description: "renault_gen3_odc_appl Repository에서 빌드할 브랜치를 선택하세요."
+      - name: "renault_gen3_platform_common"
+        description: "renault_gen3_platform_common Repository에서 빌드할 브랜치를 선택하세요."
+      - name: "renault_gen3_platform_wlc"
+        description: "renault_gen3_platform_wlc Repository에서 빌드할 브랜치를 선택하세요."
+      - name: "renault_gen3_platform_wlc_inc"
+        description: "renault_gen3_platform_wlc_inc Repository에서 빌드할 브랜치를 선택하세요."
+
+  - name: "500-test"
+    folder: "test"
+    description: "test Pipeline"
+    log_rotator: { days_to_keep: 10, num_to_keep: 10 }
+    webhook_token_id: "bhevs_renault_gen3_500"
+    webhook_branch_regex: "^refs/head/test.*$"
+    path_in_repo: ""
+    branch_parameters:
+      - name: "renault_gen3_appl"
+        description: "renault_gen3_appl Repository에서 빌드할 브랜치를 선택하세요."
 
   # 'RENAULT_GEN3' 폴더 내부 작업들
   - name: "100"

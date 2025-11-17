@@ -31,7 +31,7 @@
 - name: Jenkins | Run Jenkins container (using official image)
   community.docker.docker_container:
     name: "{{ jenkins_container_name }}"
-    image: "{{ jenkins_image_official }}"
+    image: "{{ jenkins_image }}"
     state: started
     pull: true
     detach: true
@@ -44,7 +44,7 @@
     networks:
       - name: "{{ jenkins_network_name }}"
     env:
-      TZ: "Asia/Seoul"
+      TZ: "{{ jenkins_timezone }}"
   tags:
     - jenkins
     - run
@@ -63,7 +63,7 @@
   block:
     - name: Wait for the password to be generated and path to appear in logs
       ansible.builtin.shell:
-        cmd: "docker logs {{ jenkins_container_name }} 2>&1 | grep -o '/var/jenkins_home/secrets/initialAdminPassword' -m 1"
+        cmd: "docker logs {{ jenkins_container_name }} 2>&1 | grep -o '{{ jenkins_admin_password_path }}' -m 1"
       register: password_path_result
       until: password_path_result.stdout != ""
       retries: 20
@@ -72,7 +72,7 @@
 
     - name: Fetch the actual password
       ansible.builtin.shell:
-        cmd: "docker exec {{ jenkins_container_name }} cat /var/jenkins_home/secrets/initialAdminPassword"
+        cmd: "docker exec {{ jenkins_container_name }} cat {{ jenkins_admin_password_path }}"
       register: jenkins_password
 
     - name: Display the Jenkins initial password

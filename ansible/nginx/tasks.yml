@@ -4,7 +4,7 @@
   ansible.builtin.file:
     path: "{{ certs_remote_dir }}"
     state: directory
-    mode: '0755'
+    mode: "{{ file_mode_dir }}"
   tags:
     - nginx
     - ssl
@@ -14,7 +14,7 @@
   ansible.builtin.copy:
     src: "{{ pfx_local_path }}"
     dest: "{{ certs_remote_dir }}/cert.pfx"
-    mode: '0600'
+    mode: "{{ file_mode_file }}"
   tags:
     - nginx
     - ssl
@@ -52,55 +52,37 @@
 - name: Jenkins | Re-run Jenkins container for internal access only
   community.docker.docker_container:
     name: "{{ jenkins_container_name }}"
-    image: "jenkins/jenkins:lts-jdk21"
+    image: "{{ jenkins_image }}"
     state: started
     restart_policy: unless-stopped
     expose:
-      - "8080"
-      - "50000"
+      - "{{ jenkins_host_port }}"
+      - "{{ jenkins_host_port_agent }}"
     volumes:
       - "{{ jenkins_volume_name }}:/var/jenkins_home"
     networks:
       - name: "{{ jenkins_network_name }}"
     env:
-      TZ: "Asia/Seoul"
+      TZ: "{{ timezone }}"
   tags:
     - nginx
     - jenkins
     - run
 
-- name: Nexus | Stop and remove the existing Nexus container
-  community.docker.docker_container:
-    name: "{{ nexus_container_name }}"
-    state: absent
+- name: Nginx | Create directory for nginx.conf if not exists
+  ansible.builtin.file:
+    path: "{{ nginx_conf_path | dirname }}"
+    state: directory
+    mode: "{{ file_mode_dir }}"
   tags:
     - nginx
-    - nexus
-    - run
-
-- name: Nexus | Re-run Nexus container for internal access only
-  community.docker.docker_container:
-    name: "{{ nexus_container_name }}"
-    image: "sonatype/nexus3:latest"
-    state: started
-    restart_policy: unless-stopped
-    expose:
-      - "{{ nexus_internal_port }}"
-    volumes:
-      - "nexus_data:/nexus-data"
-    networks:
-      - name: "{{ jenkins_network_name }}"
-    env:
-      TZ: "Asia/Seoul"
-  tags:
-    - nginx
-    - nexus
-    - run
+    - config
+    - setup
 
 - name: Nginx | Create configuration from template
   ansible.builtin.template:
     src: templates/nginx.conf.j2
-    dest: "/tmp/nginx.conf"
+    dest: "{{ nginx_conf_path }}"
   tags:
     - nginx
     - config
@@ -115,26 +97,48 @@
     - run
     - cleanup
 
-- name: Nginx | Run Nginx reverse proxy container
-  community.docker.docker_container:
-    name: "{{ nginx_container_name }}"
-    image: "nginx:latest"
-    state: started
-    restart_policy: unless-stopped
-    ports:
-      - "{{ jenkins_host_port_http }}:80"
-      - "{{ jenkins_host_port_https }}:443"
-      - "{{ jenkins_host_port_webhook | default('8081') }}:8081"
-      - "{{ nexus_host_port }}:{{ nexus_host_port }}"
-    volumes:
-      - "/tmp/nginx.conf:/etc/nginx/nginx.conf:ro"
-      - "{{ certs_remote_dir }}:{{ certs_remote_dir }}:ro"
-    networks:
-      - name: "{{ jenkins_network_name }}"
-  tags:
-    - nginx
-    - run
-    - container
+- name: Nginx | Run Nginx reverse proxy container with error handling
+  block:
+    - name: Nginx | Run Nginx reverse proxy container
+      community.docker.docker_container:
+        name: "{{ nginx_container_name }}"
+        image: "{{ nginx_image }}"
+        state: started
+        restart_policy: unless-stopped
+        ports:
+          - "{{ jenkins_host_port_http }}:80"
+          - "{{ jenkins_host_port_https }}:443"
+          - "{{ jenkins_host_port_webhook | default('8081') }}:8081"
+        volumes:
+          - "{{ nginx_conf_path }}:/etc/nginx/nginx.conf:ro"
+          - "{{ certs_remote_dir }}:{{ certs_remote_dir }}:ro"
+        networks:
+          - name: "{{ jenkins_network_name }}"
+      tags:
+        - nginx
+        - run
+        - container
+  rescue:
+    - name: Nginx | Remove configuration file if container run fails
+      ansible.builtin.file:
+        path: "{{ nginx_conf_path }}"
+        state: absent
+      tags:
+        - nginx
+        - cleanup
+    - name: Nginx | Remove certificate directory if container run fails
+      ansible.builtin.file:
+        path: "{{ certs_remote_dir }}"
+        state: absent
+      tags:
+        - nginx
+        - cleanup
+    - name: Nginx | Wait before cleanup
+      ansible.builtin.pause:
+        seconds: 5
+      tags:
+        - nginx
+        - cleanup
 
 - name: System | Display success message
   ansible.builtin.debug:

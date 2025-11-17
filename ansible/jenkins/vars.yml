@@ -1,11 +1,19 @@
 # jenkins/vars.yml
 ---
 # Official Jenkins image
-jenkins_image_official: "jenkins/jenkins:lts-jdk21"
+jenkins_image: "jenkins/jenkins:lts-jdk21"
 
 # Docker container and volume Information
 jenkins_container_name: "bhevs-jenkins"
 jenkins_volume_name: "jenkins_data"
-jenkins_network_name: "jenkins-net"
+
 jenkins_host_port: "8080"
 jenkins_host_port_agent: "50000"
+
+# Network and timezone settings
+jenkins_network_name: "jenkins-net"
+jenkins_timezone: "Asia/Seoul"
+
+# Initial admin password path
+jenkins_admin_password_path: "/var/jenkins_home/secrets/initialAdminPassword"
+

@@ -4,6 +4,7 @@ docker_gpg_key_dir: "/etc/apt/keyrings"
 docker_gpg_key_path: "{{ docker_gpg_key_dir }}/docker.gpg"
 docker_repo_path: "/etc/apt/sources.list.d/docker.list"
 docker_repo_filename: "docker"
+docker_gpg_key_mode: "0755"
 
 ## URL
 docker_gpg_key_url: "https://download.docker.com/linux/ubuntu/gpg"
