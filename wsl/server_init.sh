@@ -23,9 +23,17 @@ sudo apt-get install -y \
   openjdk-17-jre-headless \
   p7zip
 
+# Ansible
 sudo add-apt-repository --yes --update ppa:ansible/ansible
 sudo apt-get install -y ansible
 sudo ansible-galaxy collection install community.general
 sudo ansible-galaxy collection install community.docker
+
+# Terraform
+git clone --depth=1 https://github.com/tfutils/tfenv.git ~/.tfenv
+echo 'export PATH="$HOME/.tfenv/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+tfenv install v1.14.0
+tfenv use v1.14.0
 
 echo "  -> Utilities installed."
