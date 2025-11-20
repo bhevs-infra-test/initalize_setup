@@ -48,11 +48,11 @@
                         <filterable>true</filterable>
                         <filterLength>1</filterLength>
                     </org.biouno.unochoice.ChoiceParameter>
-                    <hudson.model.StringParameterDefinition>
+                    <hudson.model.TextParameterDefinition>
                         <name>{{ param.name }}_cherry_pick</name>
-                        <description>{{ param.name }}에 cherry-pick할 hash 값을 ,로 구분하여 작성</description>
+                        <description>{{ param.name }}에 cherry-pick할 refs/changes 값을 줄바꿈으로 구분하여 작성</description>
                         <trim>true</trim>
-                    </hudson.model.StringParameterDefinition>
+                    </hudson.model.TextParameterDefinition>
                 {% endfor %}
             </parameterDefinitions>
         </hudson.model.ParametersDefinitionProperty>
