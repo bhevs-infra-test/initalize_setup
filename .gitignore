@@ -1,75 +1,69 @@
-# Created by https://www.toptal.com/developers/gitignore/api/linux,git,powershell,intellij,visualstudiocode,ansible
-# Edit at https://www.toptal.com/developers/gitignore?templates=linux,git,powershell,intellij,visualstudiocode,ansible
+### 1. Secrets & Environment
+*.env
 
-### Ansible ###
+### 2. Terraform ###
+# 테라폼 엔진 및 임시 파일
+**/.terraform/*
+.terraform/
+
+# 상태 파일
+*.tfstate
+*.tfstate.*
+
+# 충돌 로그
+crash.log
+crash.*.log
+
+# 변수 입력 파일
+*.tfvars
+*.tfvars.json
+*.auto.tfvars
+
+# 설정 오버라이드
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+
+### 3. Ansible ###
 *.retry
-#*hosts.ini
-#*ansible.cfg
+.ansible/
 
-### Git ###
-# Created by git for backups. To disable backups in Git:
-# $ git config --global mergetool.keepBackup false
+# Ansible Vault
+.vault_pass_secrets
+
+### 4. IDE & Editor ###
+# IntelliJ
+.idea/
+
+# VS Code
+.vscode/
+*.vsix
+.history/
+
+# General Editor Temp Files
+*~
+
+### 5. OS & System ###
+.DS_Store
+Thumbs.db
+.directory
+.Trash-*
+
+
+### 6. Git & Merge ###
 *.orig
-
-# Created by git when using merge tools for conflicts
 *.BACKUP.*
 *.BASE.*
 *.REMOTE.*
-*_BACKUP_*.txt
-*_BASE_*.txt
-*_LOCAL_*.txt
-*_REMOTE_*.txt
-.vault_pass_secrets
 
 
-### Intellij ###
-.idea
-
-
-
-### Linux ###
-*~
-
-# temporary files which can be created if a process still has a handle open of a deleted file
-.fuse_hidden*
-
-# KDE directory preferences
-.directory
-
-# Linux trash folder which might appear on any partition or disk
-.Trash-*
-
-# .nfs files are created when an open file is removed but is still being accessed
-.nfs*
-
-
-
-### PowerShell ###
-# Exclude packaged modules
+### 7. PowerShell & Binaries ###
 *.zip
-
-# Exclude .NET assemblies from source
 *.dll
 
 
-
-### VisualStudioCode ###
-.vscode/*
-
-# Local History for Visual Studio Code
-.history/
-
-# Built Visual Studio Code Extensions
-*.vsix
-
-### VisualStudioCode Patch ###
-# Ignore all local history of files
-.history
-.ionide
-
-
-
-### Custom ###
+### 8. Custom (사용자 지정) ###
 change_remote.sh
 memo.md
-# End of https://www.toptal.com/developers/gitignore/api/linux,git,powershell,intellij,visualstudiocode,ansible
