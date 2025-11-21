@@ -5,6 +5,7 @@
 # 테라폼 엔진 및 임시 파일
 **/.terraform/*
 .terraform/
+planfile
 
 # 상태 파일
 *.tfstate
