@@ -100,7 +100,7 @@
 - name: FOLDER | Create temporary Folder XML files from templates
   ansible.builtin.template:
     src: "{{ jenkins_folder_template }}"
-    dest: "{{ jenkins_temp_dir }}/folder_{{ item.name }}.xml"
+    dest: "{{ jenkins_temp_dir }}/folder_{{ item.name | replace('/', '_') }}.xml"
     mode: '0600'
   vars:
     folder_description: "{{ item.description }}"
@@ -116,7 +116,7 @@
       -auth {{ jenkins_admin_user }}:{{ jenkins_admin_api_token }} \
       -noCertificateCheck \
       create-job "{{ item.name }}" \
-      < {{ jenkins_temp_dir }}/folder_{{ item.name }}.xml
+      < {{ jenkins_temp_dir }}/folder_{{ item.name | replace('/', '_') }}.xml
   loop: "{{ jenkins_folder_definitions }}"
   no_log: true
   register: folder_create_result
@@ -142,7 +142,7 @@
 - name: PIPELINE | Create temporary Job XML files from templates
   ansible.builtin.template:
     src: "{{ jenkins_job_template }}"
-    dest: "{{ jenkins_temp_dir }}/job_{{ item.folder }}_{{ item.name }}.xml"
+    dest: "{{ jenkins_temp_dir }}/job_{{ item.folder | replace('/', '_') }}_{{ item.name | replace('/', '_') }}.xml"
     mode: '0600'
   vars:
     job_description: "{{ item.description }}"
@@ -168,7 +168,7 @@
       -auth {{ jenkins_admin_user }}:{{ jenkins_admin_api_token }} \
       -noCertificateCheck \
       create-job "{{ item.folder }}/{{ item.name }}" \
-      < {{ jenkins_temp_dir }}/job_{{ item.folder }}_{{ item.name }}.xml
+      < {{ jenkins_temp_dir }}/job_{{ item.folder | replace('/', '_') }}_{{ item.name | replace('/', '_') }}.xml
   loop: "{{ jenkins_job_definitions }}"
   no_log: true
   register: job_create_result
@@ -184,7 +184,7 @@
 
 - name: PIPELINE | Remove temporary Job XML files
   ansible.builtin.file:
-    path: "{{ jenkins_temp_dir }}/job_{{ item.folder }}_{{ item.name }}.xml"
+    path: "{{ jenkins_temp_dir }}/job_{{ item.folder | replace('/', '_') }}_{{ item.name | replace('/', '_') }}.xml"
     state: absent
   loop: "{{ jenkins_job_definitions }}"
   tags:
