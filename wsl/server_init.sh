@@ -21,6 +21,7 @@ sudo apt-get install -y \
   python3-pip \
   cmake \
   openjdk-17-jre-headless \
+  jq \
   p7zip
 
 # Ansible
