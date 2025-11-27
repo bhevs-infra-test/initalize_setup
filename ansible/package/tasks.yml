@@ -15,10 +15,10 @@
     - docker
     - prerequisites
 
-#- name: Jenkins | Install prerequisite packages
-#  ansible.builtin.apt:
-#    name: "{{ jenkins_prereq_packages }}"
-#    state: present
-#  tags:
-#    - jenkins
-#    - prerequisites
+- name: Jenkins | Install prerequisite packages
+  ansible.builtin.apt:
+    name: "{{ jenkins_prereq_packages }}"
+    state: present
+  tags:
+    - jenkins
+    - prerequisites

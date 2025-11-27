@@ -8,5 +8,5 @@ docker_prereq_packages:
   - curl
   - gnupg
 
-#jenkins_prereq_packages:
-#  - jq
+jenkins_prereq_packages:
+  - jq
