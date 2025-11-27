@@ -1,0 +1,158 @@
+# jenkins/setting/auth/tasks.yml
+---
+# --- Auth: Crumb (Must run always for API calls) ---
+- name: AUTH | Get Jenkins Crumb (CSRF Token)
+  ansible.builtin.uri:
+    url: "{{ jenkins_url }}/crumbIssuer/api/json"
+    user: "{{ jenkins_admin_user }}"
+    password: "{{ jenkins_admin_api_token }}"
+    force_basic_auth: yes
+    return_content: yes
+    validate_certs: no
+  register: crumb_response
+  tags:
+    - jenkins_auth
+    - always
+
+- name: AUTH | Set Crumb Fact
+  ansible.builtin.set_fact:
+    jenkins_crumb_field: "{{ crumb_response.json.crumbRequestField }}"
+    jenkins_crumb_value: "{{ crumb_response.json.crumb }}"
+  tags:
+    - jenkins_auth
+    - always
+
+# --- Auth: Users ---
+- name: AUTH | Create/Update Users via Groovy
+  ansible.builtin.shell: |
+    echo '{{ lookup("template", "jenkins/setting/templates/scripts/create_user.groovy.j2") }}' | \
+    java -jar {{ cli_jar_path }} \
+      -s {{ jenkins_url }}/ \
+      -auth {{ jenkins_admin_user }}:{{ jenkins_admin_api_token }} \
+      -noCertificateCheck \
+      groovy =
+  vars:
+    user_id: "{{ item.username }}"
+    user_pw: "{{ item.password }}"
+  loop: "{{ jenkins_auth_users }}"
+  no_log: true
+  register: user_create_result
+  changed_when: "'Created' in user_create_result.stdout or 'Updated' in user_create_result.stdout"
+  tags:
+    - jenkins_auth
+    - jenkins_users
+    - jenkins_users_assign
+
+# --- Auth: Roles (Templates) ---
+- name: AUTH | Create Item Role Templates
+  ansible.builtin.shell: >
+    curl -X POST -s -k
+    -u "{{ jenkins_admin_user }}:{{ jenkins_admin_api_token }}"
+    -H "{{ jenkins_crumb_field }}: {{ jenkins_crumb_value }}"
+    "{{ jenkins_url }}/role-strategy/strategy/addTemplate"
+    --data "name={{ item.name }}&permissionIds={{ item.permissions | join(',') }}&overwrite=true"
+  loop: "{{ jenkins_item_role_templates }}"
+  register: item_template_result
+  changed_when: item_template_result.rc == 0
+  tags:
+    - jenkins_auth
+    - jenkins_roles_Templates
+
+# --- Auth: Roles (Global) ---
+- name: AUTH | Create Global Roles
+  ansible.builtin.shell: >
+    curl -X POST -s -k
+    -u "{{ jenkins_admin_user }}:{{ jenkins_admin_api_token }}"
+    -H "{{ jenkins_crumb_field }}: {{ jenkins_crumb_value }}"
+    "{{ jenkins_url }}/role-strategy/strategy/addRole"
+    --data "type=globalRoles&roleName={{ item.name }}&permissionIds={{ item.permissions | join(',') if (item.permissions | type_debug == 'list') else item.permissions | replace(' ', '') }}&overwrite=true"
+  loop: "{{ jenkins_global_roles }}"
+  register: global_role_result
+  changed_when: global_role_result.rc == 0
+  tags:
+    - jenkins_auth
+    - jenkins_global_roles
+
+# --- Auth: Roles (Items/Project with Template) ---
+- name: AUTH | Create Item Roles
+  ansible.builtin.shell: >
+    curl -X POST -s -k
+    -u "{{ jenkins_admin_user }}:{{ jenkins_admin_api_token }}"
+    -H "{{ jenkins_crumb_field }}: {{ jenkins_crumb_value }}"
+    "{{ jenkins_url }}/role-strategy/strategy/addRole"
+    --data "type=projectRoles&roleName={{ item.name }}&pattern=(?i)^{{ item.pattern }}.*&template={{ item.template }}&permissionIds=null&overwrite=true"
+  loop: "{{ jenkins_item_roles }}"
+  register: item_role_result
+  changed_when: item_role_result.rc == 0
+  tags:
+    - jenkins_auth
+    - jenkins_item_roles
+
+## --- Auth: Assignment (Global Roles) ---
+- name: AUTH | Enforce Global Roles (Sync State)
+  ansible.builtin.shell: |
+    USER_NAME="{{ item.0.username }}"
+    ROLE_NAME="{{ item.1.name }}"
+
+    SHOULD_HAVE={{ 1 if item.1.name in (item.0.global_roles | default([])) else 0 }}
+
+    if [ "$USER_NAME" == "{{ jenkins_admin_user }}" ]; then
+        echo "SKIPPED: Admin user '$USER_NAME' is safe."
+    elif [ "$SHOULD_HAVE" -eq 1 ]; then
+        curl -X POST -s -k \
+          -u "{{ jenkins_admin_user }}:{{ jenkins_admin_api_token }}" \
+          -H "{{ jenkins_crumb_field }}: {{ jenkins_crumb_value }}" \
+          "{{ jenkins_url }}/role-strategy/strategy/assignUserRole" \
+          --data "type=globalRoles&roleName=$ROLE_NAME&user=$USER_NAME"
+        echo "ASSIGNED: $ROLE_NAME to $USER_NAME"
+    else
+        curl -X POST -s -k \
+          -u "{{ jenkins_admin_user }}:{{ jenkins_admin_api_token }}" \
+          -H "{{ jenkins_crumb_field }}: {{ jenkins_crumb_value }}" \
+          "{{ jenkins_url }}/role-strategy/strategy/unassignUserRole" \
+          --data "type=globalRoles&roleName=$ROLE_NAME&user=$USER_NAME"
+        echo "UNASSIGNED: $ROLE_NAME from $USER_NAME"
+    fi
+  loop: "{{ jenkins_auth_users | product(jenkins_global_roles) | list }}"
+  register: sync_global_result
+  changed_when: "'ASSIGNED' in sync_global_result.stdout or 'UNASSIGNED' in sync_global_result.stdout"
+  tags:
+    - jenkins_auth
+    - jenkins_assign
+    - jenkins_users_assign
+    - jenkins_add_assign
+
+
+# --- Auth: Assignment (Item Roles) ---
+- name: AUTH | Enforce Item Roles (Sync State)
+  ansible.builtin.shell: |
+    USER_NAME="{{ item.0.username }}"
+    ROLE_NAME="{{ item.1.name }}"
+
+    SHOULD_HAVE={{ 1 if item.1.name in (item.0.item_roles | default([])) else 0 }}
+
+    if [ "$USER_NAME" == "{{ jenkins_admin_user }}" ]; then
+        echo "SKIPPED: Admin user '$USER_NAME' is safe."
+    elif [ "$SHOULD_HAVE" -eq 1 ]; then
+        curl -X POST -s -k \
+          -u "{{ jenkins_admin_user }}:{{ jenkins_admin_api_token }}" \
+          -H "{{ jenkins_crumb_field }}: {{ jenkins_crumb_value }}" \
+          "{{ jenkins_url }}/role-strategy/strategy/assignUserRole" \
+          --data "type=projectRoles&roleName=$ROLE_NAME&user=$USER_NAME"
+        echo "ASSIGNED: $ROLE_NAME to $USER_NAME"
+    else
+        curl -X POST -s -k \
+          -u "{{ jenkins_admin_user }}:{{ jenkins_admin_api_token }}" \
+          -H "{{ jenkins_crumb_field }}: {{ jenkins_crumb_value }}" \
+          "{{ jenkins_url }}/role-strategy/strategy/unassignUserRole" \
+          --data "type=projectRoles&roleName=$ROLE_NAME&user=$USER_NAME"
+        echo "UNASSIGNED: $ROLE_NAME from $USER_NAME"
+    fi
+  loop: "{{ jenkins_auth_users | product(jenkins_item_roles) | list }}"
+  register: sync_item_result
+  changed_when: "'ASSIGNED' in sync_item_result.stdout or 'UNASSIGNED' in sync_item_result.stdout"
+  tags:
+    - jenkins_auth
+    - jenkins_assign
+    - jenkins_users_assign
+    - jenkins_add_assign

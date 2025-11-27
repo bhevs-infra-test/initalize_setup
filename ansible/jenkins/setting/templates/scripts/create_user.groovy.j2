@@ -1,0 +1,30 @@
+import hudson.model.User
+import hudson.security.HudsonPrivateSecurityRealm.Details
+import jenkins.model.Jenkins
+
+def userName = "{{ user_id }}"
+def password = "{{ user_pw }}"
+
+def user = User.get(userName, false)
+
+if (user == null) {
+    user = User.get(userName, true)
+    user.addProperty(new Details(password))
+    user.save()
+    println "Created user: " + userName
+} else {
+    def details = user.getProperty(Details.class)
+    try {
+        if (details == null || !details.isPasswordCorrect(password)) {
+            user.addProperty(new Details(password))
+            user.save()
+            println "Updated password for user: " + userName
+        } else {
+            println "User already exists (Password match): " + userName
+        }
+    } catch (Exception e) {
+        user.addProperty(new Details(password))
+        user.save()
+        println "Force updated password for user: " + userName
+    }
+}

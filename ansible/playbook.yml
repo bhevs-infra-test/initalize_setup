@@ -18,11 +18,14 @@
 - hosts: setting
   vars_files:
     - jenkins/setting/vars.yml
+    - jenkins/setting/auth/vars.yml
     # secret files
     - jenkins/setting/secrets.yml
+    - jenkins/setting/auth/secrets.yml
 
   tasks:
     - import_tasks: jenkins/setting/tasks.yml
+    - import_tasks: jenkins/setting/auth/tasks.yml
 
   handlers:
     - name: Restart Jenkins
