@@ -23,14 +23,6 @@
     - system
     - packages
 
-- name: Docker | Install prerequisite packages
-  ansible.builtin.apt:
-    name: "{{ docker_prereq_packages }}"
-    state: present
-  tags:
-    - docker
-    - prerequisites
-
 - name: Docker | Create a directory for the GPG key
   ansible.builtin.file:
     path: "{{ docker_gpg_key_dir }}"

@@ -1,14 +1,15 @@
 ---
 - hosts: controller
   vars_files:
+    - package/vars.yml
     - docker/vars.yml
     - jenkins/vars.yml
     - nginx/vars.yml
     # secret files
     - nginx/secrets.yml
-    - jenkins/setting/secrets.yml
 
   tasks:
+    - import_tasks: package/tasks.yml
     - import_tasks: docker/tasks.yml
     - import_tasks: jenkins/tasks.yml
     - import_tasks: nginx/tasks.yml
@@ -17,6 +18,7 @@
 - hosts: setting
   vars_files:
     - jenkins/setting/vars.yml
+    # secret files
     - jenkins/setting/secrets.yml
 
   tasks:

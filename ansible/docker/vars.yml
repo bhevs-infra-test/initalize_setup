@@ -10,12 +10,6 @@ docker_gpg_key_mode: "0755"
 docker_gpg_key_url: "https://download.docker.com/linux/ubuntu/gpg"
 docker_repo_url_base: "https://download.docker.com/linux/ubuntu"
 
-## packages
-docker_prereq_packages:
-  - ca-certificates
-  - curl
-  - gnupg
-
 docker_packages:
   - docker-ce
   - docker-ce-cli

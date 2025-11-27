@@ -1,0 +1,24 @@
+# init/tasks.yml
+- name: Initalize | Install prerequisite packages
+  ansible.builtin.apt:
+    name: "{{ util_packages }}"
+    state: present
+  tags:
+    - init
+    - prerequisites
+
+- name: Docker | Install prerequisite packages
+  ansible.builtin.apt:
+    name: "{{ docker_prereq_packages }}"
+    state: present
+  tags:
+    - docker
+    - prerequisites
+
+- name: Jenkins | Install prerequisite packages
+  ansible.builtin.apt:
+    name: "{{ jenkins_prereq_packages }}"
+    state: present
+  tags:
+    - jenkins
+    - prerequisites

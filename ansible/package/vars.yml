@@ -1,0 +1,12 @@
+# init/vars.yml
+util_packages:
+  - vim
+  - net-tools
+
+docker_prereq_packages:
+  - ca-certificates
+  - curl
+  - gnupg
+
+jenkins_prereq_packages:
+  - jq
