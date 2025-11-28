@@ -1,0 +1,55 @@
+import jenkins.model.*
+import org.jenkinsci.plugins.workflow.libs.*
+import jenkins.plugins.git.GitSCMSource
+import jenkins.plugins.git.traits.BranchDiscoveryTrait
+import groovy.json.JsonSlurper
+import java.util.Base64
+import java.nio.charset.StandardCharsets
+
+def globalLibs = GlobalLibraries.get()
+def currentLibs = globalLibs.getLibraries()
+
+def rawJson = new String(Base64.getDecoder().decode("{{ jenkins_global_libraries | to_json | b64encode }}"), StandardCharsets.UTF_8)
+def targetList = new JsonSlurper().parseText(rawJson)
+
+List<LibraryConfiguration> newLibConfigs = []
+boolean isChanged = false
+
+targetList.each { item ->
+    def scmSource = new GitSCMSource(null, item.repo_url, item.credentials_id ?: "", "*", "", false)
+    scmSource.setTraits([new BranchDiscoveryTrait()])
+
+    def retriever = new SCMSourceRetriever(scmSource)
+    if (item.library_path) {
+        retriever.setLibraryPath(item.library_path)
+    }
+
+    def config = new LibraryConfiguration(item.name, retriever)
+    config.defaultVersion = item.default_version ?: "master"
+    config.implicit = item.containsKey('implicit') ? item.implicit : false
+    config.allowVersionOverride = item.containsKey('allow_version_override') ? item.allow_version_override : true
+    config.includeInChangesets = item.containsKey('include_in_changesets') ? item.include_in_changesets : true
+
+    newLibConfigs.add(config)
+
+    if (!currentLibs.any { it.name == item.name }) {
+        println "Added Library: ${item.name}"
+        isChanged = true
+    } else {
+        println "Updated/Kept Library: ${item.name}"
+    }
+}
+
+def protectedPrefixes = ["MANUAL_", "TEST_"]
+
+currentLibs.findAll { lib -> !targetList.any { it.name == lib.name } }.each { lib ->
+    if (protectedPrefixes.any { lib.name.startsWith(it) }) {
+        newLibConfigs.add(lib)
+    } else {
+        println "Removed Library: ${lib.name}"
+        isChanged = true
+    }
+}
+
+globalLibs.setLibraries(newLibConfigs)
+globalLibs.save()

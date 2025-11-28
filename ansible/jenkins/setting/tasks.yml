@@ -37,8 +37,9 @@
   tags:
     - jenkins_plugins
 
-# --- config ---
-- name: GLOBAL PROPS | Create Groovy script from template
+# --- system config ---
+# Global Properties
+- name: System Config - PROPERTIES | Create Groovy script from template
   ansible.builtin.template:
     src: "templates/system/global_properties.groovy.j2"
     dest: "{{ jenkins_temp_dir }}/apply_global_props.groovy"
@@ -47,7 +48,7 @@
     - jenkins_system
     - jenkins_properties
 
-- name: GLOBAL PROPS | Apply Properties via Jenkins CLI Groovy
+- name: System Config - PROPERTIES | Apply Properties via Jenkins CLI Groovy
   ansible.builtin.shell: |
     JENKINS_CLI_TRANSPORT=http \
     java -jar {{ cli_jar_path }} \
@@ -61,13 +62,45 @@
     - jenkins_system
     - jenkins_properties
 
-- name: GLOBAL PROPS | Cleanup temporary script
+- name: System Config - PROPERTIES | Cleanup temporary script
   ansible.builtin.file:
     path: "{{ jenkins_temp_dir }}/apply_global_props.groovy"
     state: absent
   tags:
     - jenkins_system
     - jenkins_properties
+
+# Global Libraries
+- name: System Config - LIBRARIES| Create Groovy script from template
+  ansible.builtin.template:
+    src: "templates/system/global_libraries.groovy.j2"
+    dest: "{{ jenkins_temp_dir }}/apply_global_libs.groovy"
+    mode: '0600'
+  tags:
+    - jenkins_system
+    - jenkins_libraries
+
+- name: System Config - LIBRARIES| Apply Shared Libraries via Jenkins CLI
+  ansible.builtin.shell: |
+    JENKINS_CLI_TRANSPORT=http \
+    java -jar {{ cli_jar_path }} \
+      -s http://{{ jenkins_host }}/ \
+      -auth {{ jenkins_admin_user }}:{{ jenkins_admin_api_token }} \
+      -noCertificateCheck \
+      groovy = < {{ jenkins_temp_dir }}/apply_global_libs.groovy
+  register: cli_result
+  changed_when: "'Added' in cli_result.stdout or 'Removed' in cli_result.stdout"
+  tags:
+    - jenkins_system
+    - jenkins_libraries
+
+- name: System Config - LIBRARIES| Cleanup temporary script
+  ansible.builtin.file:
+    path: "{{ jenkins_temp_dir }}/apply_global_libs.groovy"
+    state: absent
+  tags:
+    - jenkins_system
+    - jenkins_libraries
 
 # --- Credentials ---
 - name: CREDENTIALS | Create temporary XML files from templates (injecting Vault secrets)

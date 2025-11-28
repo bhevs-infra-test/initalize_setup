@@ -33,6 +33,17 @@ jenkins_global_properties:
   - key: 'GLOBAL_NAS_ROOT_PATH'
     value: '\\192.168.36.31\제품개발본부\### Jenkins ###'
 
+# System - Global Pipeline Libraries
+jenkins_global_libraries:
+  - name: "bhevs-shared-library"
+    default_version: "main"
+    implicit: false
+    allow_version_override: true
+    include_in_changesets: true
+    repo_url: "https://github.com/bhevs-dev/jenkins.git"
+    credentials_id: "github-credentials"
+    library_path: "shared-library/"
+
 
 # 인증서
 credential_definitions:
