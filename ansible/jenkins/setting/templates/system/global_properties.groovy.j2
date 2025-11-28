@@ -1,0 +1,42 @@
+import jenkins.model.*
+import hudson.slaves.*
+import groovy.json.JsonSlurper
+import java.util.Base64
+import java.nio.charset.StandardCharsets
+
+def instance = Jenkins.getInstance()
+def globalProps = instance.getGlobalNodeProperties()
+def envNode = globalProps.getAll(EnvironmentVariablesNodeProperty.class).find { true }
+
+if (!envNode) {
+    envNode = new EnvironmentVariablesNodeProperty()
+    globalProps.add(envNode)
+}
+
+def envVars = envNode.getEnvVars()
+def rawJson = new String(Base64.getDecoder().decode("{{ jenkins_global_properties | to_json | b64encode }}"), StandardCharsets.UTF_8)
+def targetMap = new JsonSlurper().parseText(rawJson).collectEntries { [it.key, it.value.toString()] }
+def isChanged = false
+
+targetMap.each { k, v ->
+    if (envVars.get(k) != v) {
+        envVars.put(k, v)
+        println "Updated: ${k}"
+        isChanged = true
+    }
+}
+
+def protectedPrefixes = ["GLOBAL_"]
+def keysToRemove = envVars.keySet().findAll { key ->
+    !targetMap.containsKey(key) && !protectedPrefixes.any { prefix -> key.startsWith(prefix) }
+}
+
+keysToRemove.each { key ->
+    envVars.remove(key)
+    println "Removed: ${key}"
+    isChanged = true
+}
+
+if (isChanged) {
+    instance.save()
+}

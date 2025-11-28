@@ -28,8 +28,10 @@ jenkins_plugins_list:
   - active-directory
   - uno-choice
 
-
-
+# System - Global Properties
+jenkins_global_properties:
+  - key: 'GLOBAL_NAS_ROOT_PATH'
+    value: '\\192.168.36.31\제품개발본부\### Jenkins ###'
 
 
 # 인증서
