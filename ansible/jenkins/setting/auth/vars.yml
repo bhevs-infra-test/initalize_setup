@@ -114,7 +114,7 @@ jenkins_auth_users:
     item_roles:
       - "renault_pa"
 
-  - username: "renault_viewer"
+  - username: "renault_view"
     password: "{{ renault_viewer_pw }}"
     global_roles:
       - "4.Authenticated"
