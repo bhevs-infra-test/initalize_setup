@@ -1,20 +1,11 @@
 module "repo" {
   source      = "../../modules/repository"
   name        = var.repo_name
-  description = "Managed by Terraform"
+  description = var.description
 
-  team_permissions = {
-    "admin_group" = {
-      id         = var.admin_team_id
-      permission = "maintain"
-    }
-    "dev_group" = {
-      id         = var.dev_team_id
-      permission = "push"
-    }
-    "other_group" = {
-      id         = var.other_team_id
-      permission = "push"
-    }
-  }
+  team_permissions = merge(
+      var.use_admin ? { "admin" = { id = var.admin_team_id, permission = "maintain" } } : {},
+      var.use_dev   ? { "dev"   = { id = var.dev_team_id,   permission = "push" } }     : {},
+      var.use_other ? { "other" = { id = var.other_team_id, permission = "push" } }     : {}
+  )
 }

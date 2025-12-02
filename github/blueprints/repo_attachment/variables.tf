@@ -1,6 +1,38 @@
-variable "repo_name" { type = string }
+variable "repo_name" {
+  type = string
+}
 
-# 팀 ID를 받아오는 변수들
-variable "admin_team_id" { type = string }
-variable "dev_team_id"   { type = string }
-variable "other_team_id" { type = string }
+variable "description" {
+  type    = string
+  default = "Managed by Terraform"
+}
+
+variable "admin_team_id" {
+  type    = string
+  default = ""
+}
+
+variable "dev_team_id" {
+  type    = string
+  default = ""
+}
+
+variable "other_team_id" {
+  type    = string
+  default = ""
+}
+
+variable "use_admin" {
+  type    = bool
+  default = false
+}
+
+variable "use_dev" {
+  type    = bool
+  default = false
+}
+
+variable "use_other" {
+  type    = bool
+  default = false
+}
