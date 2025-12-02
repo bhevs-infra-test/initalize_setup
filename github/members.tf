@@ -9,11 +9,13 @@ locals {
 
   # 개발자 권한
   mb_devs   = concat(local.super_users, [
-    "ChoiseU"
+    "ChoiSeungWoo98"
   ])
 
   # 외주 권한
-  mb_others = []
+  mb_others   = concat(local.super_users, [
+    "ChoiseU98"
+  ])
 
   # [FORD_GEN 4.0 인원]
   # 관리자 권한
@@ -23,11 +25,11 @@ locals {
 
   # 개발자 권한
   ford_devs   = concat(local.super_users, [
-    "ChoiseU"
+    "ChoiSeungWoo98"
   ])
 
   # 외주 권한
   ford_others = [
-    "ChoiseU"
+    "ChoiseU98"
   ]
 }
