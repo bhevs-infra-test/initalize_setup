@@ -2,25 +2,41 @@
 # 0. [Security] Organization 보안 정책 (Policies)
 # ==================================================================
 resource "github_organization_settings" "org_security" {
-  billing_email = "choiseu@bhevs.co.kr"
+  # [프로필 및 연락처]
+  billing_email      = "evsinfo@bhevs.co.kr"
+  company            = "BH EVS"
+  blog               = "https://www.bhevs.co.kr/"
+  email              = "tech@bhevs.co.kr"
+  location           = "서울 강서구 마곡중앙8로3길 35 (07793)"
+  name               = "BH EVS"
+  description        = "BH EVS Code and Version Management."
 
-  # [보안] Private 레포지토리의 기본 권한 제거 (팀을 통해서만 접근 가능)
-  default_repository_permission = "none"
+  # [프로젝트 관리 기능]
+  has_organization_projects     = false
+  has_repository_projects       = false
 
-  # [보안] 멤버의 무분별한 레포 생성 및 Public 전환 차단
-  members_can_create_repositories         = false
-  members_can_create_public_repositories  = false
-  members_can_create_private_repositories = false
-  members_can_create_pages                = false
+  # [권한 및 생성 통제 (거버넌스)]
+  default_repository_permission               = "none"
+  members_can_create_repositories             = false
+  members_can_create_public_repositories      = false
+  members_can_create_private_repositories     = false
+  # members_can_create_internal_repositories    = false
+  members_can_create_pages                    = false
+  members_can_create_public_pages             = false
+  # members_can_create_private_pages            = false
 
-  # [보안] 조직 내 코드 유출 방지를 위해 Forking 차단
-  members_can_fork_private_repositories   = false
+  # [데이터 유출 방지]
+  members_can_fork_private_repositories    = false
+  web_commit_signoff_required              = true
 
-  # [보안] 2FA 강제 (전사 공지 후 true로 변경 권장)
-  # has_organization_projects = true
-  # has_repository_projects   = true
+  # [보안 자동화 (GHAS & Dependabot)]
+  # advanced_security_enabled_for_new_repositories                  = false
+  dependabot_alerts_enabled_for_new_repositories                  = true
+  dependabot_security_updates_enabled_for_new_repositories        = true
+  dependency_graph_enabled_for_new_repositories                   = true
+  # secret_scanning_enabled_for_new_repositories                    = true
+  # secret_scanning_push_protection_enabled_for_new_repositories    = true
 
-  # [안전] 실수로 인한 설정 삭제 방지 (운영 필수 설정)
   lifecycle {
     prevent_destroy = true
   }
@@ -90,7 +106,12 @@ locals {
         use_dev   = repo.dev_team   != null
         use_other = repo.other_team != null
 
-        topics    = ["firmware", "automotive", lower(proj.name), lower(repo.name)]
+        topics = [
+          "firmware",
+          "automotive",
+          replace(lower(proj.name), "/[^a-z0-9-]/", "-"),
+          replace(lower(repo.name), "/[^a-z0-9-]/", "-")
+        ]
       }
     ]
   ])

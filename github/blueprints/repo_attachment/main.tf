@@ -3,9 +3,13 @@ module "repo" {
   name        = var.repo_name
   description = var.description
 
+  topics             = var.repo_topics
+  template_repo_name = var.template_repo_name
+  org_name           = var.org_name
+
   team_permissions = merge(
-    var.admin_team_id != "" ? { "admin" = { id = var.admin_team_id, permission = "maintain" } } : {},
-    var.dev_team_id   != "" ? { "dev"   = { id = var.dev_team_id,   permission = "push" } }     : {},
-    var.other_team_id != "" ? { "other" = { id = var.other_team_id, permission = "push" } }     : {}
+      var.admin_team_id != "" ? { "admin" = { id = var.admin_team_id, permission = "maintain" } } : {},
+      var.dev_team_id   != "" ? { "dev"   = { id = var.dev_team_id,   permission = "push" } }     : {},
+      var.other_team_id != "" ? { "other" = { id = var.other_team_id, permission = "push" } }     : {}
   )
 }
