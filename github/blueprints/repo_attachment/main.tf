@@ -4,8 +4,8 @@ module "repo" {
   description = var.description
 
   team_permissions = merge(
-      var.use_admin ? { "admin" = { id = var.admin_team_id, permission = "maintain" } } : {},
-      var.use_dev   ? { "dev"   = { id = var.dev_team_id,   permission = "push" } }     : {},
-      var.use_other ? { "other" = { id = var.other_team_id, permission = "push" } }     : {}
+    var.admin_team_id != "" ? { "admin" = { id = var.admin_team_id, permission = "maintain" } } : {},
+    var.dev_team_id   != "" ? { "dev"   = { id = var.dev_team_id,   permission = "push" } }     : {},
+    var.other_team_id != "" ? { "other" = { id = var.other_team_id, permission = "push" } }     : {}
   )
 }

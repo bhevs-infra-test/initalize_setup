@@ -9,6 +9,9 @@ resource "github_organization_settings" "org_security" {
   members_can_create_public_repositories  = false
   members_can_create_private_repositories = false
   members_can_create_pages                = false
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # ==================================================================

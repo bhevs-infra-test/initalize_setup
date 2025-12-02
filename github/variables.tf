@@ -21,3 +21,12 @@ variable "projects" {
     }))
   }))
 }
+
+variable "project_member_map" {
+  description = "프로젝트별 팀 멤버 매핑"
+  type = map(object({
+    admins = list(string)
+    devs   = list(string)
+    others = list(string)
+  }))
+}
