@@ -36,3 +36,18 @@ variable "use_other" {
   type    = bool
   default = false
 }
+
+variable "template_repo_name" {
+  type    = string
+  default = null
+}
+
+variable "org_name" {
+  type    = string
+  default = ""
+}
+
+variable "repo_topics" {
+  type    = list(string)
+  default = []
+}
