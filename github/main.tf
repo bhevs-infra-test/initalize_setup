@@ -104,17 +104,17 @@ locals {
   all_repos = flatten([
     for proj in var.projects : [
       for repo in proj.repo_list : {
-        key          = "${proj.name}_${repo.name}"
+        key          = length(trim(proj.version, " ")) > 0 ? "${proj.name}_${proj.version}_${repo.name}" : "${proj.name}_${repo.name}"
         project_name = proj.name
-        repo_name    = "${proj.name}_${repo.name}"
-
-        use_admin = repo.admin_team != null
-        use_dev   = repo.dev_team   != null
-        use_other = repo.other_team != null
-
-        topics = [
-          replace(lower(proj.name), "/[^a-z0-9-]/", "-"),
-          replace(lower(repo.name), "/[^a-z0-9-]/", "-")
+        repo_name    = length(trim(proj.version, " ")) > 0 ? "${proj.name}_${proj.version}_${repo.name}" : "${proj.name}_${repo.name}"
+        use_admin    = repo.admin_team != null
+        use_dev      = repo.dev_team   != null
+        use_other    = repo.other_team != null
+        topics       = length(trim(proj.version, " ")) > 0 ? [
+          replace(lower(proj.name), ".", "-"),
+          replace(lower(proj.version), ".", "-")
+        ] : [
+          replace(lower(proj.name), ".", "-")
         ]
       }
     ]
