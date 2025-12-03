@@ -94,7 +94,8 @@ resource "github_organization_settings" "org_security" {
 module "project_teams" {
   source = "./blueprints/project_team"
   for_each = { for p in var.projects : p.name => p }
-  project_name = each.key
+  project_name    = each.key
+  project_version = each.value.version
 }
 
 # ==================================================================
