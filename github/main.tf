@@ -1,5 +1,11 @@
 # ==================================================================
 # 0. [Security] Organization 보안 정책 (Policies)
+# [주의: Terraform Provider 미지원 항목 - 수동 설정 필요]
+# 따라서 terraform apply 후 GitHub Organization > Settings > Member privileges 에서 직접 체크 해제(Uncheck) 해야 합니다.
+# 1. Admin repository permissions > Repository visibility change > Allow members to change repository visibilities for this organization (공개범위 변경)
+# 2. Admin repository permissions > Repository deletion and transfer > Allow members to delete or transfer repositories for this organization (삭제 및 이전)
+# 3. GitHub Apps > Allow repository admins to install GitHub Apps for their repositories (앱 설치)
+# 4. Member team permissions > Team creation rules > Allow members to create teams (팀 생성 권한)
 # ==================================================================
 resource "github_organization_settings" "org_security" {
   # [프로필 및 연락처]
