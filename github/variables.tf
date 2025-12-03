@@ -22,11 +22,18 @@ variable "projects" {
   }))
 }
 
-variable "project_member_map" {
-  description = "프로젝트별 팀 멤버 매핑"
-  type = map(object({
-    admins = list(string)
-    devs   = list(string)
-    others = list(string)
-  }))
+variable "template_repo_name" {
+  description = "템플릿 레포지토리 이름"
+  type        = string
+  default     = "project-repository-templates"
+}
+
+variable "teams" {
+  description = "팀명과 멤버를 한 번에 관리하는 변수"
+  type        = map(list(string))
+}
+
+variable "super_users" {
+  description = "모든 팀에 공통으로 포함될 계정 리스트"
+  type        = list(string)
 }

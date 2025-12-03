@@ -98,23 +98,35 @@ locals {
   all_repos = flatten([
     for proj in var.projects : [
       for repo in proj.repo_list : {
-        key          = "${proj.name}-${repo.name}"
+        key          = "${proj.name}_${repo.name}"
         project_name = proj.name
-        repo_name    = "${proj.name}-${repo.name}"
+        repo_name    = "${proj.name}_${repo.name}"
 
         use_admin = repo.admin_team != null
         use_dev   = repo.dev_team   != null
         use_other = repo.other_team != null
 
         topics = [
-          "firmware",
-          "automotive",
           replace(lower(proj.name), "/[^a-z0-9-]/", "-"),
           replace(lower(repo.name), "/[^a-z0-9-]/", "-")
         ]
       }
     ]
   ])
+
+  teams_with_super = {
+    for team, members in var.teams :
+    team => concat(var.super_users, members)
+  }
+
+  project_member_map = {
+    for proj in var.projects :
+    proj.name => {
+      admins = flatten([for repo in proj.repo_list : repo.admin_team != null ? local.teams_with_super[repo.admin_team] : []])
+      devs   = flatten([for repo in proj.repo_list : repo.dev_team   != null ? local.teams_with_super[repo.dev_team]   : []])
+      others = flatten([for repo in proj.repo_list : repo.other_team != null ? local.teams_with_super[repo.other_team] : []])
+    }
+  }
 }
 
 module "repos" {
@@ -123,12 +135,8 @@ module "repos" {
   for_each = { for item in local.all_repos : item.key => item }
 
   repo_name = each.value.repo_name
-
-  # [핵심] UI에서 직접 만드실 템플릿 레포지토리 이름 지정
-  template_repo_name = "project-repository-templates"
+  template_repo_name = var.template_repo_name
   org_name           = var.github_org
-
-  # 태그(Topics) 전달
   repo_topics        = each.value.topics
 
   # 팀 연결 로직
@@ -144,23 +152,14 @@ module "repos" {
 # ==================================================================
 # 4. [Users] 멤버 할당
 # ==================================================================
-locals {
-  project_member_map = {
-    "MB_GEN4.0"   = { admins = local.mb_admins, devs = local.mb_devs, others = local.mb_others }
-    "FORD_GEN4.0" = { admins = local.ford_admins, devs = local.ford_devs, others = local.ford_others }
-  }
-}
-
 module "users" {
   source = "./blueprints/user_attachment"
-
   for_each = local.project_member_map
 
-  admin_team_id = module.project_teams[each.key].admin_id
-  dev_team_id   = module.project_teams[each.key].dev_id
-  other_team_id = module.project_teams[each.key].other_id
-
-  admins = each.value.admins
-  devs   = each.value.devs
-  others = each.value.others
+  admins         = each.value.admins
+  devs           = each.value.devs
+  others         = each.value.others
+  admin_team_id  = module.project_teams[each.key].admin_id
+  dev_team_id    = module.project_teams[each.key].dev_id
+  other_team_id  = module.project_teams[each.key].other_id
 }
